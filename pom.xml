@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<postgresql.version>42.6.2</postgresql.version>
 		<flyway-core.version>11.8.0</flyway-core.version>
 	</properties>
 	<dependencies>
@@ -49,6 +50,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
