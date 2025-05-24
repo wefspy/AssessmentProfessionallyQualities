@@ -4,7 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterRequestDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserProfileDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterResponseDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.RoleNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UsernameAlreadyTakenException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.mapper.UserProfileMapper;
@@ -44,7 +44,7 @@ public class RegistrationService {
     }
 
     @Transactional
-    public UserProfileDto register(RegisterRequestDto dto) {
+    public RegisterResponseDto register(RegisterRequestDto dto) {
         validateUsername(dto.username());
 
         User user = createUser(dto);
@@ -52,7 +52,7 @@ public class RegistrationService {
         Collection<Role> roles = fetchBasicRolesWithRoleUser();
         assignRolesToUser(user, roles);
 
-        return userProfileMapper.toDto(user, userInfo, roles);
+        return userProfileMapper.toDto(user, roles);
     }
 
     private void validateUsername(String username) {
