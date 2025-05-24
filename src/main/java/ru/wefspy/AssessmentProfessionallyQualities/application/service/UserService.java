@@ -1,10 +1,7 @@
 package ru.wefspy.AssessmentProfessionallyQualities.application.service;
 
 import org.springframework.stereotype.Service;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillCategoryDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TeamMemberDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserProfileDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UserNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.*;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
@@ -12,8 +9,10 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -65,7 +64,7 @@ public class UserService {
         List<UserSkill> userSkills = userSkillRepository.findAllByUserId(userId);
         SkillDto bestSkill = null;
         Collection<SkillCategoryDto> skillCategories = new ArrayList<>();
-        
+
         if (!userSkills.isEmpty()) {
             UserSkill bestUserSkill = userSkills.stream()
                     .max(Comparator.comparing(UserSkill::getRating))
@@ -117,5 +116,60 @@ public class UserService {
                 teams,
                 skillCategories
         );
+    }
+
+    public Collection<UserSkillCategoryDto> getUserSkillCategories(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("Пользователь с id %d не найден", userId)
+                ));
+
+        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(userId);
+        Map<Long, List<UserSkill>> skillsByCategoryId = new HashMap<>();
+        Map<Long, SkillCategory> categoriesById = new HashMap<>();
+
+        for (UserSkill userSkill : userSkills) {
+            Skill skill = skillRepository.findById(userSkill.getSkillId()).orElse(null);
+            if (skill != null) {
+                Long categoryId = skill.getSkillCategoryId();
+                SkillCategory category = skillCategoryRepository.findById(categoryId).orElse(null);
+
+                if (category != null) {
+                    skillsByCategoryId.computeIfAbsent(categoryId, k -> new ArrayList<>()).add(userSkill);
+                    categoriesById.putIfAbsent(categoryId, category);
+                }
+            }
+        }
+
+        Collection<UserSkillCategoryDto> result = new ArrayList<>();
+        for (Map.Entry<Long, List<UserSkill>> entry : skillsByCategoryId.entrySet()) {
+            Long categoryId = entry.getKey();
+            List<UserSkill> categoryUserSkills = entry.getValue();
+            SkillCategory category = categoriesById.get(categoryId);
+
+            double totalRating = categoryUserSkills.stream()
+                    .mapToDouble(UserSkill::getRating)
+                    .sum();
+            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : totalRating / categoryUserSkills.size();
+
+            Collection<SkillDto> skillDtos = new ArrayList<>();
+            for (UserSkill userSkill : categoryUserSkills) {
+                skillRepository.findById(userSkill.getSkillId())
+                        .ifPresent(skill -> skillDtos.add(
+                                new SkillDto(
+                                        skill.getId(),
+                                        skill.getName(),
+                                        userSkill.getRating()
+                                )));
+            }
+
+            result.add(new UserSkillCategoryDto(
+                    new SkillCategoryDto(category.getId(), category.getName()),
+                    skillDtos,
+                    averageRating
+            ));
+        }
+
+        return result;
     }
 } 
