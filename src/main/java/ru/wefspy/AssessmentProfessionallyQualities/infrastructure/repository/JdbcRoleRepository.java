@@ -58,6 +58,17 @@ public class JdbcRoleRepository {
         return roles.stream().findFirst();
     }
 
+    public List<Role> findAllByUserId(Long userId) {
+        return jdbcTemplate.query(
+                "SELECT r.id, r.name " +
+                        "FROM roles r " +
+                        "JOIN users_roles ur ON r.id = ur.role_id " +
+                        "WHERE ur.user_id = ? ",
+                roleRowMapper,
+                userId
+        );
+    }
+
     public Role update(Role role) {
         jdbcTemplate.update(
                 "UPDATE roles " +
