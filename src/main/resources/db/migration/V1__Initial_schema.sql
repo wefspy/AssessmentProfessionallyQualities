@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS users_info
 (
     id                     BIGINT PRIMARY KEY,
     main_skill_category_id BIGINT,
+    email                  VARCHAR(255) NOT NULL,
     first_name             VARCHAR(255) NOT NULL,
     middle_name            VARCHAR(255),
     last_name              VARCHAR(255) NOT NULL,
@@ -147,8 +148,8 @@ CREATE TABLE IF NOT EXISTS tasks
 CREATE TABLE IF NOT EXISTS evaluations
 (
     id            BIGINT PRIMARY KEY DEFAULT nextval('evaluations_seq'),
-    task_id       BIGINT NOT NULL,
-    user_skill_id BIGINT NOT NULL,
+    task_id       BIGINT   NOT NULL,
+    user_skill_id BIGINT   NOT NULL,
     evaluation    SMALLINT NOT NULL,
     feedback      TEXT,
     FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
