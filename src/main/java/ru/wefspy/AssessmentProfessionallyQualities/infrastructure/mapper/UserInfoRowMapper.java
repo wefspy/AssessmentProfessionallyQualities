@@ -15,6 +15,7 @@ public class UserInfoRowMapper implements RowMapper<UserInfo> {
         return new UserInfo(
                 rs.getLong("id"),
                 rs.getLong("main_skill_category_id"),
+                rs.getString("email"),
                 rs.getString("first_name"),
                 rs.getString("middle_name"),
                 rs.getString("last_name"),

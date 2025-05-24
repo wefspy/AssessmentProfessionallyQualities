@@ -1,10 +1,12 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.User;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserRowMapper;
 
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,14 +27,20 @@ public class JdbcUserRepository {
     }
 
     public User save(User user) {
-        return jdbcTemplate.queryForObject(
+        var keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO users (username, password_hash) " +
-                        "VALUES (?, ?) " +
-                        "RETURNING * ",
-                userRowMapper,
-                user.getUsername(),
-                user.getPasswordHash()
-        );
+                        "VALUES (?, ?)",
+                new String[]{"id"}
+            );
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPasswordHash());
+            return ps;
+        }, keyHolder);
+
+        user.setId(keyHolder.getKey().longValue());
+        return user;
     }
 
     public void saveAll(Collection<User> users) {
