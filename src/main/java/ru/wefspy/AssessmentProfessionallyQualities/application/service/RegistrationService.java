@@ -13,6 +13,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.domain.model.User;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserRole;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcRoleRepository;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserInfoRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserRoleRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.RoleEnum;
@@ -26,17 +27,20 @@ import java.util.stream.Collectors;
 public class RegistrationService {
 
     private final JdbcUserRepository userRepository;
+    private final JdbcUserInfoRepository userInfoRepository;
     private final JdbcRoleRepository roleRepository;
     private final JdbcUserRoleRepository userRoleRepository;
     private final UserProfileMapper userProfileMapper;
     private final PasswordEncoder passwordEncoder;
 
     public RegistrationService(JdbcUserRepository userRepository,
+                               JdbcUserInfoRepository userInfoRepository,
                                JdbcRoleRepository roleRepository,
                                JdbcUserRoleRepository userRoleRepository,
                                UserProfileMapper userProfileMapper,
                                PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userInfoRepository = userInfoRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
         this.userProfileMapper = userProfileMapper;
@@ -67,18 +71,19 @@ public class RegistrationService {
                 passwordEncoder.encode(dto.password())
         );
 
-        userRepository.save(user);
-        return user;
+        return userRepository.save(user);
     }
 
     private UserInfo createUserInfo(User user, RegisterRequestDto dto) {
-        return new UserInfo(
+        UserInfo userInfo = new UserInfo(
                 user.getId(),
                 dto.email(),
                 dto.firstName(),
                 dto.middleName(),
                 dto.lastName()
         );
+
+        return userInfoRepository.save(userInfo);
     }
 
     private Collection<Role> fetchBasicRolesWithRoleUser() {
