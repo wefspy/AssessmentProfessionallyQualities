@@ -60,6 +60,26 @@ public class JdbcUserRepository {
         return users.stream().findFirst();
     }
 
+    public Optional<User> findByUsername(String username) {
+        List<User> users = jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM users " +
+                        "WHERE username = ?",
+                userRowMapper,
+                username
+        );
+
+        return users.stream().findFirst();
+    }
+
+    public Boolean existsByUsername(String username) {
+        return jdbcTemplate.queryForObject(
+                "SELECT exists (SELECT 1 FROM users WHERE username = ?)",
+                Boolean.class,
+                username
+        );
+    }
+
     public User update(User user) {
         jdbcTemplate.update(
                 "UPDATE users " +
