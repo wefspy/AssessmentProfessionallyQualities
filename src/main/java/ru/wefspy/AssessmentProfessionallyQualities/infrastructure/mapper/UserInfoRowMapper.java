@@ -12,6 +12,9 @@ import java.sql.SQLException;
 public class UserInfoRowMapper implements RowMapper<UserInfo> {
     @Override
     public UserInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+        String educationStr = rs.getString("education");
+        Education education = educationStr != null ? Education.valueOf(educationStr) : null;
+        
         return new UserInfo(
                 rs.getLong("id"),
                 rs.getLong("main_skill_category_id"),
@@ -20,7 +23,7 @@ public class UserInfoRowMapper implements RowMapper<UserInfo> {
                 rs.getString("middle_name"),
                 rs.getString("last_name"),
                 rs.getShort("course_number"),
-                Education.valueOf(rs.getString("education"))
+                education
         );
     }
 }

@@ -8,6 +8,10 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.RoleNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UserNotFoundException;
@@ -34,6 +38,72 @@ public class ExceptionControllerAdvice {
                 exception,
                 userMessage,
                 HttpStatus.BAD_REQUEST,
+                request
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorDto> exception(MethodArgumentTypeMismatchException exception,
+                                                 HttpServletRequest request) {
+        String userMessage = String.format(
+            "Неверный формат параметра '%s'. Ожидается тип: %s",
+            exception.getName(),
+            exception.getRequiredType() != null ? exception.getRequiredType().getSimpleName() : "неизвестный"
+        );
+        
+        return buildErrorResponse(
+                exception,
+                userMessage,
+                HttpStatus.BAD_REQUEST,
+                request
+        );
+    }
+
+    @ExceptionHandler(MissingPathVariableException.class)
+    public ResponseEntity<ApiErrorDto> exception(MissingPathVariableException exception,
+                                                 HttpServletRequest request) {
+        String userMessage = String.format(
+            "Отсутствует обязательный параметр в URL: %s",
+            exception.getVariableName()
+        );
+        
+        return buildErrorResponse(
+                exception,
+                userMessage,
+                HttpStatus.BAD_REQUEST,
+                request
+        );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiErrorDto> exception(MissingServletRequestParameterException exception,
+                                                 HttpServletRequest request) {
+        String userMessage = String.format(
+            "Отсутствует обязательный параметр запроса: %s",
+            exception.getParameterName()
+        );
+        
+        return buildErrorResponse(
+                exception,
+                userMessage,
+                HttpStatus.BAD_REQUEST,
+                request
+        );
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiErrorDto> exception(NoHandlerFoundException exception,
+                                                 HttpServletRequest request) {
+        String userMessage = String.format(
+            "Не найден обработчик для %s %s",
+            exception.getHttpMethod(),
+            exception.getRequestURL()
+        );
+        
+        return buildErrorResponse(
+                exception,
+                userMessage,
+                HttpStatus.NOT_FOUND,
                 request
         );
     }

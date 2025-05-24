@@ -71,6 +71,16 @@ public class JdbcUserSkillRepository {
         return usersSkills.stream().findFirst();
     }
 
+    public List<UserSkill> findAllByUserId(Long userId) {
+        return jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM users_skills " +
+                        "WHERE user_id = ?",
+                userSkillRowMapper,
+                userId
+        );
+    }
+
     public UserSkill update(UserSkill userSkill) {
         jdbcTemplate.update(
                 "UPDATE users_skills " +
