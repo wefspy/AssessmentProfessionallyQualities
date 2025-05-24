@@ -75,3 +75,10 @@ mvn spring-boot:run
 
 - 📌 Пример конкретной метрики (максимальное число активных сессий Tomcat):  
   [http://localhost:8080/actuator/metrics/tomcat.sessions.active.max](http://localhost:8080/actuator/metrics/tomcat.sessions.active.max)
+
+## 📘 Swagger-документация
+
+Для просмотра и тестирования REST API доступен интерфейс Swagger UI:
+
+🔗 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
