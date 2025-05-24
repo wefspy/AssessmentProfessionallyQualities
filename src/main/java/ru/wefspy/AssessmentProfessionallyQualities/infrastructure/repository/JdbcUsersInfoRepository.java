@@ -1,10 +1,13 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserInfoRowMapper;
 
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

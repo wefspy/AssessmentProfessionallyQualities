@@ -1,10 +1,13 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserSkill;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserSkillRowMapper;
 
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,15 +28,21 @@ public class JdbcUserSkillRepository {
     }
 
     public UserSkill save(UserSkill userSkill) {
-        return jdbcTemplate.queryForObject(
-                "INSERT INTO users_skills (user_id, skill_id, rating)  " +
-                        "VALUES (?, ?, ?) " +
-                        "RETURNING * ",
-                userSkillRowMapper,
-                userSkill.getUserId(),
-                userSkill.getSkillId(),
-                userSkill.getRating()
-        );
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO users_skills (user_id, skill_id, rating) " +
+                        "VALUES (?, ?, ?)",
+                new String[]{"id"}
+            );
+            ps.setLong(1, userSkill.getUserId());
+            ps.setLong(2, userSkill.getSkillId());
+            ps.setDouble(3, userSkill.getRating());
+            return ps;
+        }, keyHolder);
+
+        userSkill.setId(keyHolder.getKey().longValue());
+        return userSkill;
     }
 
     public void saveAll(Collection<UserSkill> usersSkills) {

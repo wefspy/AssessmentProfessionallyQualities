@@ -1,13 +1,15 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Role;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.RoleRowMapper;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.sql.PreparedStatement;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class JdbcRoleRepository {
@@ -25,13 +27,19 @@ public class JdbcRoleRepository {
     }
 
     public Role save(Role role) {
-        return jdbcTemplate.queryForObject(
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO roles (name) " +
-                        "VALUES (?) " +
-                        "RETURNING * ",
-                roleRowMapper,
-                role.getName()
-        );
+                        "VALUES (?)",
+                new String[]{"id"}
+            );
+            ps.setString(1, role.getName());
+            return ps;
+        }, keyHolder);
+
+        role.setId(keyHolder.getKey().longValue());
+        return role;
     }
 
     public void saveAll(Collection<Role> roles) {

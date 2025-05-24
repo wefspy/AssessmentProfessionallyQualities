@@ -1,10 +1,12 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Evaluation;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.EvaluationRowMapper;
 
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,16 +27,22 @@ public class JdbcEvaluationRepository {
     }
 
     public Evaluation save(Evaluation evaluation) {
-        return jdbcTemplate.queryForObject(
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO evaluations (task_id, user_skill_id, evaluation, feedback) " +
-                        "VALUES (?, ?, ?, ?) " +
-                        "RETURNING * ",
-                evaluationRowMapper,
-                evaluation.getTaskId(),
-                evaluation.getUserSkillId(),
-                evaluation.getEvaluation(),
-                evaluation.getFeedback()
-        );
+                        "VALUES (?, ?, ?, ?)",
+                new String[]{"id"}
+            );
+            ps.setLong(1, evaluation.getTaskId());
+            ps.setLong(2, evaluation.getUserSkillId());
+            ps.setShort(3, evaluation.getEvaluation());
+            ps.setString(4, evaluation.getFeedback());
+            return ps;
+        }, keyHolder);
+
+        evaluation.setId(keyHolder.getKey().longValue());
+        return evaluation;
     }
 
     public void saveAll(Collection<Evaluation> evaluations) {
