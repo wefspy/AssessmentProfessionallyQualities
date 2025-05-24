@@ -16,6 +16,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserProfileDt
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserSkillCategoryDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.UserService;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.UserDetailsImpl;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ReviewSkillCategoriesDto;
 
 import java.util.Collection;
 
@@ -68,7 +69,7 @@ public class UserController {
         return ResponseEntity.ok(profileDto);
     }
 
-    @Operation(summary = "Получение категорий навыков пользователя")
+    @Operation(summary = "Получение своих категорий навыков")
     @ApiResponse(responseCode = "200", description = "Категории навыков пользователя получены", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = UserSkillCategoryDto.class))
     })
@@ -107,5 +108,46 @@ public class UserController {
             @PathVariable Long id) {
         Collection<UserSkillCategoryDto> skillCategories = userService.getUserSkillCategories(id);
         return ResponseEntity.ok(skillCategories);
+    }
+
+    @Operation(summary = "Получение своих категорий навыков для обзора")
+    @ApiResponse(responseCode = "200", description = "Категории навыков для обзора получены", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewSkillCategoriesDto.class))
+    })
+    @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/me/review-skill-categories")
+    public ResponseEntity<ReviewSkillCategoriesDto> getMyReviewSkillCategories(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ReviewSkillCategoriesDto reviewSkillCategoriesDto = userService.getReviewSkillCategories(userDetails.getId());
+        return ResponseEntity.ok(reviewSkillCategoriesDto);
+    }
+
+    @Operation(summary = "Получение категорий навыков для обзора пользователя")
+    @ApiResponse(responseCode = "200", description = "Категории навыков для обзора получены", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewSkillCategoriesDto.class))
+    })
+    @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/{id}/review-skill-categories")
+    public ResponseEntity<ReviewSkillCategoriesDto> getUserReviewSkillCategories(
+            @Parameter(description = "ID пользователя", required = true)
+            @PathVariable Long id) {
+        ReviewSkillCategoriesDto reviewSkillCategoriesDto = userService.getReviewSkillCategories(id);
+        return ResponseEntity.ok(reviewSkillCategoriesDto);
     }
 }

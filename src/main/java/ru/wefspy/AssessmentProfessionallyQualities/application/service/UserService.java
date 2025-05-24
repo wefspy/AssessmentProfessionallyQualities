@@ -172,4 +172,48 @@ public class UserService {
 
         return result;
     }
+
+    public ReviewSkillCategoriesDto getReviewSkillCategories(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("Пользователь с id %d не найден", userId)
+                ));
+
+        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(userId);
+        Map<Long, List<UserSkill>> skillsByCategoryId = new HashMap<>();
+        Map<Long, SkillCategory> categoriesById = new HashMap<>();
+
+        for (UserSkill userSkill : userSkills) {
+            Skill skill = skillRepository.findById(userSkill.getSkillId()).orElse(null);
+            if (skill != null) {
+                Long categoryId = skill.getSkillCategoryId();
+                SkillCategory category = skillCategoryRepository.findById(categoryId).orElse(null);
+
+                if (category != null) {
+                    skillsByCategoryId.computeIfAbsent(categoryId, k -> new ArrayList<>()).add(userSkill);
+                    categoriesById.putIfAbsent(categoryId, category);
+                }
+            }
+        }
+
+        List<ReviewSkillCategoryDto> categories = new ArrayList<>();
+        for (Map.Entry<Long, List<UserSkill>> entry : skillsByCategoryId.entrySet()) {
+            Long categoryId = entry.getKey();
+            List<UserSkill> categoryUserSkills = entry.getValue();
+            SkillCategory category = categoriesById.get(categoryId);
+
+            double totalRating = categoryUserSkills.stream()
+                    .mapToDouble(UserSkill::getRating)
+                    .sum();
+            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : totalRating / categoryUserSkills.size();
+
+            categories.add(new ReviewSkillCategoryDto(
+                    category.getId(),
+                    category.getName(),
+                    averageRating
+            ));
+        }
+
+        return new ReviewSkillCategoriesDto(categories);
+    }
 } 
