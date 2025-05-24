@@ -77,6 +77,22 @@ public class JdbcRoleRepository {
         );
     }
 
+    public List<Role> findAllByName(Collection<String> names) {
+        if (names == null || names.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(names.size(), "?"));
+
+        return jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM roles " +
+                        "WHERE name IN (%s)".formatted(placeholders),
+                roleRowMapper,
+                names.toArray()
+        );
+    }
+
     public Role update(Role role) {
         jdbcTemplate.update(
                 "UPDATE roles " +

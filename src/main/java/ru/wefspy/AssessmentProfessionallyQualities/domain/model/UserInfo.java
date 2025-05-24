@@ -7,21 +7,25 @@ import java.util.Objects;
 public class UserInfo {
     private Long id;
     private Long mainSkillCategoryId;
+    private String email;
     private String firstName;
     private String middleName;
     private String lastName;
     private Short courseNumber;
     private Education education;
 
-    public UserInfo() {}
+    public UserInfo() {
+    }
 
     public UserInfo(Long mainSkillCategoryId,
+                    String email,
                     String firstName,
                     String middleName,
                     String lastName,
                     Short courseNumber,
                     Education education) {
         setMainSkillCategoryId(mainSkillCategoryId);
+        setEmail(email);
         setFirstName(firstName);
         setMiddleName(middleName);
         setLastName(lastName);
@@ -31,13 +35,34 @@ public class UserInfo {
 
     public UserInfo(Long id,
                     Long mainSkillCategoryId,
+                    String email,
                     String firstName,
                     String middleName,
                     String lastName,
                     Short courseNumber,
                     Education education) {
-        this(mainSkillCategoryId, firstName, middleName, lastName, courseNumber, education);
+        this(
+                mainSkillCategoryId,
+                email,
+                firstName,
+                middleName,
+                lastName,
+                courseNumber,
+                education
+        );
         setId(id);
+    }
+
+    public UserInfo(Long id,
+                    String email,
+                    String firstName,
+                    String middleName,
+                    String lastName) {
+        setId(id);
+        setEmail(email);
+        setFirstName(firstName);
+        setMiddleName(middleName);
+        setLastName(lastName);
     }
 
     public Long getId() {
@@ -54,6 +79,14 @@ public class UserInfo {
 
     public void setMainSkillCategoryId(Long mainSkillCategoryId) {
         this.mainSkillCategoryId = mainSkillCategoryId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getFirstName() {
@@ -116,6 +149,7 @@ public class UserInfo {
         return "UserInfo{" +
                 "id=" + id +
                 ", mainSkillCategoryId=" + mainSkillCategoryId +
+                ", email='" + email + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", middleName='" + middleName + '\'' +
                 ", lastName='" + lastName + '\'' +
