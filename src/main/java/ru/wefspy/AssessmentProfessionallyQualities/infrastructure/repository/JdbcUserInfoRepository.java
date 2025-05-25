@@ -241,7 +241,7 @@ public class JdbcUserInfoRepository {
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO users_info (id, main_skill_category_id, email, first_name, middle_name, last_name, course_number, education) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?::education)"
             );
             ps.setLong(1, userInfo.getId());
             if (userInfo.getMainSkillCategoryId() != null) {
@@ -276,7 +276,7 @@ public class JdbcUserInfoRepository {
     public void saveAll(Collection<UserInfo> usersInfo) {
         jdbcTemplate.batchUpdate(
                 "INSERT INTO users_info (id, main_skill_category_id, email, first_name, middle_name, last_name, course_number, education) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?::education)",
                 usersInfo,
                 usersInfo.size(),
                 (ps, userInfo) -> {
@@ -340,7 +340,7 @@ public class JdbcUserInfoRepository {
                         "middle_name = ?, " +
                         "last_name = ?, " +
                         "course_number = ?, " +
-                        "education = ? " +
+                        "education = ?::education " +
                         "WHERE id = ? ",
                 userInfo.getMainSkillCategoryId(),
                 userInfo.getEmail(),
@@ -348,7 +348,7 @@ public class JdbcUserInfoRepository {
                 userInfo.getMiddleName(),
                 userInfo.getLastName(),
                 userInfo.getCourseNumber(),
-                userInfo.getEducation(),
+                userInfo.getEducation() != null ? userInfo.getEducation().name() : Types.NULL,
                 userInfo.getId()
         );
 
