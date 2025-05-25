@@ -358,4 +358,17 @@ public class JdbcUserInfoRepository {
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM users_info WHERE id = ? ", id);
     }
+
+    public List<UserInfo> findAllByUserIds(List<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(userIds.size(), "?"));
+        return jdbcTemplate.query(
+                String.format("SELECT * FROM users_info WHERE id IN (%s)", placeholders),
+                userInfoRowMapper,
+                userIds.toArray()
+        );
+    }
 }
