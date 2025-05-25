@@ -256,7 +256,7 @@ public class UserService {
         List<PageableUserDto> userDtos = users.stream()
                 .map(user -> {
                     UserInfo userInfo = userInfoRepository.findByUserId(user.getId())
-                            .orElse(new UserInfo(user.getId(), null, null, null, null));
+                            .orElse(new UserInfo(user.getId(), null, null, null, null, null, null, null));
 
                     SkillCategoryDto mainSkillCategory = null;
                     if (userInfo.getMainSkillCategoryId() != null) {
@@ -281,23 +281,95 @@ public class UserService {
 
                     List<UserSkill> userSkills = userSkillRepository.findAllByUserId(user.getId());
 
-                    double averageRating = userSkills.stream()
-                            .mapToDouble(UserSkill::getRating)
-                            .average()
-                            .orElse(0.0);
-
+                    // Get top skills
                     Collection<SkillDto> topSkills = userSkills.stream()
                             .sorted((a, b) -> Double.compare(b.getRating(), a.getRating()))
-                            .limit(5)
+                            .limit(3)
                             .map(userSkill -> skillRepository.findById(userSkill.getSkillId())
                                     .map(skill -> new SkillDto(
-                                            skill.getId(),
+                                            skill.getId(), 
                                             skill.getName(),
                                             userSkill.getRating()
                                     )))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
                             .toList();
+
+                    double averageRating = userSkills.stream()
+                            .mapToDouble(UserSkill::getRating)
+                            .average()
+                            .orElse(0.0);
+
+                    return new PageableUserDto(
+                            user.getId(),
+                            userInfo.getFirstName(),
+                            userInfo.getMiddleName(),
+                            userInfo.getLastName(),
+                            teams,
+                            userInfo.getCourseNumber(),
+                            userInfo.getEducation(),
+                            mainSkillCategory,
+                            topSkills,
+                            averageRating
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(userDtos, pageable, total);
+    }
+
+    public Page<PageableUserDto> searchUsers(String searchQuery, List<SkillSearchCriteria> skillCriteria, Pageable pageable) {
+        long total = userInfoRepository.countByNameSearch(searchQuery, skillCriteria);
+        List<UserInfo> foundUsers = userInfoRepository.searchByName(searchQuery, skillCriteria, pageable);
+        
+        List<PageableUserDto> userDtos = foundUsers.stream()
+                .map(userInfo -> {
+                    User user = userRepository.findById(userInfo.getId())
+                            .orElseThrow(() -> new UserNotFoundException(
+                                    String.format("User with id %d not found", userInfo.getId())
+                            ));
+
+                    SkillCategoryDto mainSkillCategory = null;
+                    if (userInfo.getMainSkillCategoryId() != null) {
+                        SkillCategory category = skillCategoryRepository.findById(userInfo.getMainSkillCategoryId())
+                                .orElse(null);
+                        if (category != null) {
+                            mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName());
+                        }
+                    }
+
+                    List<TeamMember> teamMembers = teamMemberRepository.findAllByUserId(user.getId());
+                    Collection<TeamMemberDto> teams = teamMembers.stream()
+                            .map(member -> teamRepository.findById(member.getTeamId())
+                                    .map(team -> new TeamMemberDto(
+                                            team.getId(),
+                                            team.getName(),
+                                            member.getRole()
+                                    )))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .toList();
+
+                    List<UserSkill> userSkills = userSkillRepository.findAllByUserId(user.getId());
+
+                    // Get top skills
+                    Collection<SkillDto> topSkills = userSkills.stream()
+                            .sorted((a, b) -> Double.compare(b.getRating(), a.getRating()))
+                            .limit(3)
+                            .map(userSkill -> skillRepository.findById(userSkill.getSkillId())
+                                    .map(skill -> new SkillDto(
+                                            skill.getId(), 
+                                            skill.getName(),
+                                            userSkill.getRating()
+                                    )))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .toList();
+
+                    double averageRating = userSkills.stream()
+                            .mapToDouble(UserSkill::getRating)
+                            .average()
+                            .orElse(0.0);
 
                     return new PageableUserDto(
                             user.getId(),
