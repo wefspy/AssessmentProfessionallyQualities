@@ -1,13 +1,17 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillSearchCriteria;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserInfoRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +28,213 @@ public class JdbcUserInfoRepository {
 
     public Long count() {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM users_info", Long.class);
+    }
+
+    public List<UserInfo> searchByName(String query) {
+        String searchPattern = "%" + query.toLowerCase() + "%";
+        return jdbcTemplate.query(
+                "SELECT * FROM users_info WHERE " +
+                        "LOWER(first_name) LIKE ? OR " +
+                        "LOWER(middle_name) LIKE ? OR " +
+                        "LOWER(last_name) LIKE ? " +
+                        "ORDER BY id",
+                userInfoRowMapper,
+                searchPattern, searchPattern, searchPattern
+        );
+    }
+
+    public List<UserInfo> searchByName(String query, Pageable pageable) {
+        String searchPattern = "%" + query.toLowerCase() + "%";
+        return jdbcTemplate.query(
+                "SELECT * FROM users_info WHERE " +
+                        "LOWER(first_name) LIKE ? OR " +
+                        "LOWER(middle_name) LIKE ? OR " +
+                        "LOWER(last_name) LIKE ? " +
+                        "ORDER BY id " +
+                        "LIMIT ? OFFSET ?",
+                userInfoRowMapper,
+                searchPattern, searchPattern, searchPattern,
+                pageable.getPageSize(), pageable.getOffset()
+        );
+    }
+
+    public List<UserInfo> searchByName(String query, Pageable pageable, Long skillId) {
+        String searchPattern = "%" + query.toLowerCase() + "%";
+        
+        StringBuilder sql = new StringBuilder(
+                "SELECT DISTINCT ui.* FROM users_info ui " +
+                "LEFT JOIN skill_categories sc ON ui.main_skill_category_id = sc.id " +
+                "LEFT JOIN users_skills us ON ui.id = us.user_id AND us.skill_id = ? " +
+                "WHERE LOWER(ui.first_name) LIKE ? OR " +
+                "LOWER(ui.middle_name) LIKE ? OR " +
+                "LOWER(ui.last_name) LIKE ? ");
+
+        String sortField = "ui.id";
+        if (pageable.getSort().isSorted()) {
+            var sort = pageable.getSort().get().findFirst().orElse(null);
+            if (sort != null) {
+                switch (sort.getProperty()) {
+                    case "courseNumber" -> sortField = "ui.course_number";
+                    case "mainSkillCategory" -> sortField = "sc.name";
+                    case "skillRating" -> sortField = "COALESCE(us.rating, 0)";
+                    default -> sortField = "ui.id";
+                }
+                sortField += sort.isAscending() ? " ASC" : " DESC";
+            }
+        }
+        
+        sql.append("ORDER BY ").append(sortField)
+           .append(" LIMIT ? OFFSET ?");
+
+        return jdbcTemplate.query(
+                sql.toString(),
+                userInfoRowMapper,
+                skillId, searchPattern, searchPattern, searchPattern,
+                pageable.getPageSize(), pageable.getOffset()
+        );
+    }
+
+    public List<UserInfo> searchByName(String query, List<SkillSearchCriteria> skillCriteria, Pageable pageable) {
+        String searchPattern = "%" + (query != null ? query.toLowerCase() : "") + "%";
+        
+        StringBuilder sql = new StringBuilder(
+                "WITH RECURSIVE skill_requirements(skill_id, min_rating) AS (" +
+                "    VALUES ");
+
+        // Добавляем значения для каждого критерия навыка
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            sql.append(String.join(", ", Collections.nCopies(skillCriteria.size(), "(?, ?)")));
+        } else {
+            sql.append("(NULL::bigint, NULL::smallint)");
+        }
+
+        sql.append("), user_skills_agg AS (" +
+                "    SELECT " +
+                "        us.user_id, " +
+                "        COUNT(DISTINCT CASE WHEN EXISTS (" +
+                "            SELECT 1 FROM skill_requirements sr " +
+                "            WHERE sr.skill_id = us.skill_id " +
+                "            AND us.rating >= sr.min_rating" +
+                "        ) THEN us.skill_id END) as matching_skills_count, " +
+                "        AVG(CASE WHEN EXISTS (" +
+                "            SELECT 1 FROM skill_requirements sr " +
+                "            WHERE sr.skill_id = us.skill_id" +
+                "        ) THEN us.rating ELSE NULL END) as avg_rating " +
+                "    FROM users_skills us " +
+                "    GROUP BY us.user_id " +
+                ") " +
+                "SELECT DISTINCT ui.* FROM users_info ui " +
+                "LEFT JOIN skill_categories sc ON ui.main_skill_category_id = sc.id " +
+                "LEFT JOIN user_skills_agg usa ON ui.id = usa.user_id " +
+                "WHERE (LOWER(ui.first_name) LIKE ? OR " +
+                "LOWER(ui.middle_name) LIKE ? OR " +
+                "LOWER(ui.last_name) LIKE ?) ");
+
+        // Если указаны критерии навыков, добавляем условие на количество совпадающих навыков
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            sql.append("AND (usa.matching_skills_count = ? OR usa.matching_skills_count IS NULL) ");
+        }
+
+        String sortField = "ui.id";
+        if (pageable.getSort().isSorted()) {
+            var sort = pageable.getSort().get().findFirst().orElse(null);
+            if (sort != null) {
+                switch (sort.getProperty()) {
+                    case "courseNumber" -> sortField = "ui.course_number";
+                    case "mainSkillCategory" -> sortField = "sc.name";
+                    case "skillRating" -> sortField = "COALESCE(usa.avg_rating, 0)";
+                    default -> sortField = "ui.id";
+                }
+                sortField += sort.isAscending() ? " ASC" : " DESC";
+            }
+        }
+        
+        sql.append("ORDER BY ").append(sortField)
+           .append(" LIMIT ? OFFSET ?");
+
+        List<Object> params = new ArrayList<>();
+        
+        // Добавляем параметры для skill_requirements
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            for (SkillSearchCriteria criteria : skillCriteria) {
+                params.add(criteria.skillId());
+                params.add(criteria.minRating());
+            }
+        }
+
+        // Добавляем параметры для поиска
+        params.add(searchPattern);
+        params.add(searchPattern);
+        params.add(searchPattern);
+
+        // Добавляем параметр количества требуемых навыков
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            params.add(skillCriteria.size());
+        }
+
+        // Добавляем параметры пагинации
+        params.add(pageable.getPageSize());
+        params.add(pageable.getOffset());
+
+        return jdbcTemplate.query(sql.toString(), userInfoRowMapper, params.toArray());
+    }
+
+    public long countByNameSearch(String query, List<SkillSearchCriteria> skillCriteria) {
+        String searchPattern = "%" + (query != null ? query.toLowerCase() : "") + "%";
+        
+        StringBuilder sql = new StringBuilder(
+                "WITH RECURSIVE skill_requirements(skill_id, min_rating) AS (" +
+                "    VALUES ");
+
+        // Добавляем значения для каждого критерия навыка
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            sql.append(String.join(", ", Collections.nCopies(skillCriteria.size(), "(?, ?)")));
+        } else {
+            sql.append("(NULL::bigint, NULL::smallint)");
+        }
+
+        sql.append("), user_skills_agg AS (" +
+                "    SELECT " +
+                "        us.user_id, " +
+                "        COUNT(DISTINCT CASE WHEN EXISTS (" +
+                "            SELECT 1 FROM skill_requirements sr " +
+                "            WHERE sr.skill_id = us.skill_id " +
+                "            AND us.rating >= sr.min_rating" +
+                "        ) THEN us.skill_id END) as matching_skills_count " +
+                "    FROM users_skills us " +
+                "    GROUP BY us.user_id " +
+                ") " +
+                "SELECT COUNT(DISTINCT ui.id) FROM users_info ui " +
+                "LEFT JOIN user_skills_agg usa ON ui.id = usa.user_id " +
+                "WHERE (LOWER(ui.first_name) LIKE ? OR " +
+                "LOWER(ui.middle_name) LIKE ? OR " +
+                "LOWER(ui.last_name) LIKE ?) ");
+
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            sql.append("AND (usa.matching_skills_count = ? OR usa.matching_skills_count IS NULL) ");
+        }
+
+        List<Object> params = new ArrayList<>();
+        
+        // Добавляем параметры для skill_requirements
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            for (SkillSearchCriteria criteria : skillCriteria) {
+                params.add(criteria.skillId());
+                params.add(criteria.minRating());
+            }
+        }
+
+        // Добавляем параметры для поиска
+        params.add(searchPattern);
+        params.add(searchPattern);
+        params.add(searchPattern);
+
+        // Добавляем параметр количества требуемых навыков
+        if (skillCriteria != null && !skillCriteria.isEmpty()) {
+            params.add(skillCriteria.size());
+        }
+
+        return jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
     }
 
     public UserInfo save(UserInfo userInfo) {
