@@ -7,11 +7,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.EvaluationRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserSkillCategoryDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.EvaluationService;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.UserDetailsImpl;
 
 import java.util.Collection;
 
@@ -57,5 +60,18 @@ public class EvaluationController {
     public ResponseEntity<Collection<SkillDto>> getSkillsForEvaluation(
             @Parameter(description = "ID задачи") @PathVariable Long taskId) {
         return ResponseEntity.ok(evaluationService.getSkillsForEvaluation(taskId));
+    }
+
+    @Operation(summary = "Получение своих soft skills")
+    @ApiResponse(responseCode = "200", description = "Soft skills пользователя успешно получены", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = UserSkillCategoryDto.class))
+    })
+    @ApiResponse(responseCode = "401", description = "Пользователь не аутентифицирован", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/me/soft-skills")
+    public ResponseEntity<UserSkillCategoryDto> getMySoftSkills(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(evaluationService.getUserSoftSkills(userDetails.getId()));
     }
 } 

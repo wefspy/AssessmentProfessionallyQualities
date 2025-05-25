@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.AddUserSkillRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillSearchRequest;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserSkillCategoryDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.SkillService;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Skill;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserSkill;

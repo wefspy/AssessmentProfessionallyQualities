@@ -33,14 +33,14 @@ public class JdbcSkillCategoryRepository {
 
     public List<SkillCategory> findAll() {
         return jdbcTemplate.query(
-                "SELECT * FROM skill_categories",
+                "SELECT * FROM skill_categories WHERE name != 'Soft Skills'",
                 rowMapper
         );
     }
 
     public List<SkillCategory> findAll(Pageable pageable) {
         return jdbcTemplate.query(
-                "SELECT * FROM skill_categories ORDER BY id LIMIT ? OFFSET ?",
+                "SELECT * FROM skill_categories WHERE name != 'Soft Skills' ORDER BY id LIMIT ? OFFSET ?",
                 rowMapper,
                 pageable.getPageSize(),
                 pageable.getOffset()
@@ -49,7 +49,7 @@ public class JdbcSkillCategoryRepository {
 
     public Long count() {
         return jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM skill_categories",
+                "SELECT COUNT(*) FROM skill_categories WHERE name != 'Soft Skills'",
                 Long.class
         );
     }
@@ -110,5 +110,14 @@ public class JdbcSkillCategoryRepository {
 
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM skill_categories WHERE id = ? ", id);
+    }
+
+    public Optional<SkillCategory> findByName(String name) {
+        List<SkillCategory> result = jdbcTemplate.query(
+                "SELECT * FROM skill_categories WHERE name = ?",
+                rowMapper,
+                name
+        );
+        return result.stream().findFirst();
     }
 }

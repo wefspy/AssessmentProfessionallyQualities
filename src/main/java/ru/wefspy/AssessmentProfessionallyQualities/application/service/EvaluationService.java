@@ -3,13 +3,19 @@ package ru.wefspy.AssessmentProfessionallyQualities.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.EvaluationRequest;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillCategoryDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserSkillCategoryDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.exception.SkillCategoryNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.TaskNotFoundException;
+import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UserNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.enums.TaskStatus;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.*;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,18 +25,24 @@ public class EvaluationService {
     private final JdbcUserSkillRepository userSkillRepository;
     private final JdbcSkillRepository skillRepository;
     private final JdbcEvaluationRepository evaluationRepository;
+    private final JdbcUserRepository userRepository;
+    private final JdbcSkillCategoryRepository skillCategoryRepository;
 
     public EvaluationService(
             JdbcTaskRepository taskRepository,
             JdbcTeamMemberRepository teamMemberRepository,
             JdbcUserSkillRepository userSkillRepository,
             JdbcSkillRepository skillRepository,
-            JdbcEvaluationRepository evaluationRepository) {
+            JdbcEvaluationRepository evaluationRepository,
+            JdbcUserRepository userRepository,
+            JdbcSkillCategoryRepository skillCategoryRepository) {
         this.taskRepository = taskRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userSkillRepository = userSkillRepository;
         this.skillRepository = skillRepository;
         this.evaluationRepository = evaluationRepository;
+        this.userRepository = userRepository;
+        this.skillCategoryRepository = skillCategoryRepository;
     }
 
     @Transactional
@@ -97,5 +109,45 @@ public class EvaluationService {
                 })
                 .filter(dto -> dto != null)
                 .collect(Collectors.toList());
+    }
+
+    public UserSkillCategoryDto getUserSoftSkills(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("Пользователь с id %d не найден", userId)
+                ));
+
+        // Get the Soft Skills category
+        SkillCategory softSkillsCategory = skillCategoryRepository.findByName("Soft Skills")
+                .orElseThrow(() -> new SkillCategoryNotFoundException("Soft Skills category not found"));
+
+        // Get all user's soft skills
+        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(userId);
+        List<UserSkill> softSkills = new ArrayList<>();
+        Collection<SkillDto> skillDtos = new ArrayList<>();
+
+        for (UserSkill userSkill : userSkills) {
+            Skill skill = skillRepository.findById(userSkill.getSkillId()).orElse(null);
+            if (skill != null && skill.getSkillCategoryId().equals(softSkillsCategory.getId())) {
+                softSkills.add(userSkill);
+                skillDtos.add(new SkillDto(
+                        skill.getId(),
+                        skill.getName(),
+                        userSkill.getRating()
+                ));
+            }
+        }
+
+        // Calculate average rating
+        double totalRating = softSkills.stream()
+                .mapToDouble(UserSkill::getRating)
+                .sum();
+        double averageRating = softSkills.isEmpty() ? 0.0 : totalRating / softSkills.size();
+
+        return new UserSkillCategoryDto(
+                new SkillCategoryDto(softSkillsCategory.getId(), softSkillsCategory.getName(), softSkillsCategory.getColor()),
+                skillDtos,
+                averageRating
+        );
     }
 } 
