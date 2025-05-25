@@ -87,4 +87,17 @@ public class TaskController {
             @Valid @RequestBody UpdateTaskRequest request) {
         return ResponseEntity.ok(taskService.updateTask(taskId, request));
     }
+
+    @Operation(summary = "Получение задачи по ID")
+    @ApiResponse(responseCode = "200", description = "Задача успешно найдена", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = TaskWithMembersDto.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Задача не найдена", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/{taskId}")
+    public ResponseEntity<TaskWithMembersDto> getTaskById(
+            @Parameter(description = "ID задачи") @PathVariable Long taskId) {
+        return ResponseEntity.ok(taskService.getTaskById(taskId));
+    }
 } 

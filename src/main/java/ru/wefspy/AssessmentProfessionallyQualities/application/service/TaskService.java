@@ -248,4 +248,10 @@ public class TaskService {
                 categoryColor
         );
     }
+
+    public TaskWithMembersDto getTaskById(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
+        return getTaskWithMembers(task);
+    }
 } 
