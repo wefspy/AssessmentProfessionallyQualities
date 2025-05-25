@@ -35,8 +35,8 @@
 		<jjwt.version>0.12.3</jjwt.version>
 		<jbcrypt.version>0.4</jbcrypt.version>
 
-		<postgresql.version>42.6.2</postgresql.version>
-		<flyway-core.version>11.7.2</flyway-core.version>
+		<postgresql.version>42.7.2</postgresql.version>
+		<flyway-core.version>10.10.0</flyway-core.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -101,6 +101,12 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
+			<version>${flyway-core.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 			<version>${flyway-core.version}</version>
 		</dependency>
 
