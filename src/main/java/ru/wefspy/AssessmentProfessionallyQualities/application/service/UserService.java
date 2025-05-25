@@ -89,7 +89,7 @@ public class UserService {
             SkillCategory category = skillCategoryRepository.findById(userInfo.getMainSkillCategoryId())
                     .orElse(null);
             if (category != null) {
-                mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName());
+                mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName(), category.getColor());
             }
         }
 
@@ -116,7 +116,7 @@ public class UserService {
                     if (userSkillObj != null && !processedCategoryIds.contains(userSkillObj.getSkillCategoryId())) {
                         SkillCategory category = skillCategoryRepository.findById(userSkillObj.getSkillCategoryId()).orElse(null);
                         if (category != null) {
-                            skillCategories.add(new SkillCategoryDto(category.getId(), category.getName()));
+                            skillCategories.add(new SkillCategoryDto(category.getId(), category.getName(), category.getColor()));
                             processedCategoryIds.add(category.getId());
                         }
                     }
@@ -196,7 +196,7 @@ public class UserService {
             }
 
             result.add(new UserSkillCategoryDto(
-                    new SkillCategoryDto(category.getId(), category.getName()),
+                    new SkillCategoryDto(category.getId(), category.getName(), category.getColor()),
                     skillDtos,
                     averageRating
             ));
@@ -242,6 +242,7 @@ public class UserService {
             categories.add(new ReviewSkillCategoryDto(
                     category.getId(),
                     category.getName(),
+                    category.getColor(),
                     averageRating
             ));
         }
@@ -263,7 +264,7 @@ public class UserService {
                         SkillCategory category = skillCategoryRepository.findById(userInfo.getMainSkillCategoryId())
                                 .orElse(null);
                         if (category != null) {
-                            mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName());
+                            mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName(), category.getColor());
                         }
                     }
 
@@ -334,7 +335,7 @@ public class UserService {
                         SkillCategory category = skillCategoryRepository.findById(userInfo.getMainSkillCategoryId())
                                 .orElse(null);
                         if (category != null) {
-                            mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName());
+                            mainSkillCategory = new SkillCategoryDto(category.getId(), category.getName(), category.getColor());
                         }
                     }
 

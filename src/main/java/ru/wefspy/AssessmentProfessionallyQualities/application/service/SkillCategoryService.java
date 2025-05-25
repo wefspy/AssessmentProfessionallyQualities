@@ -22,7 +22,10 @@ public class SkillCategoryService {
         long total = skillCategoryRepository.count();
         List<SkillCategory> categories = skillCategoryRepository.findAll(pageable);
         List<SkillCategoryDto> categoryDtos = categories.stream()
-                .map(category -> new SkillCategoryDto(category.getId(), category.getName()))
+                .map(category -> new SkillCategoryDto(
+                        category.getId(),
+                        category.getName(),
+                        category.getColor()))
                 .toList();
         return new PageImpl<>(categoryDtos, pageable, total);
     }

@@ -5,6 +5,7 @@ import java.util.Objects;
 public class SkillCategory {
     private Long id;
     private String name;
+    private String color;
 
     public SkillCategory() {}
 
@@ -16,6 +17,11 @@ public class SkillCategory {
                          String name) {
         this(name);
         setId(id);
+    }
+
+    public SkillCategory(Long id, String name, String color) {
+        this(id, name);
+        setColor(color);
     }
 
     public Long getId() {
@@ -32,6 +38,14 @@ public class SkillCategory {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     @Override
@@ -54,6 +68,7 @@ public class SkillCategory {
         return "SkillCategory{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", color='" + color + '\'' +
                 '}';
     }
 }

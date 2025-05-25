@@ -23,6 +23,7 @@ public class JdbcSkillCategoryRepository {
         SkillCategory category = new SkillCategory();
         category.setId(rs.getLong("id"));
         category.setName(rs.getString("name"));
+        category.setColor(rs.getString("color"));
         return category;
     };
 
@@ -57,11 +58,12 @@ public class JdbcSkillCategoryRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO skill_categories (name) " +
-                        "VALUES (?)",
+                "INSERT INTO skill_categories (name, color) " +
+                        "VALUES (?, ?)",
                 new String[]{"id"}
             );
             ps.setString(1, skillCategory.getName());
+            ps.setString(2, skillCategory.getColor());
             return ps;
         }, keyHolder);
 
@@ -71,12 +73,13 @@ public class JdbcSkillCategoryRepository {
 
     public void saveAll(Collection<SkillCategory> skillCategories) {
         jdbcTemplate.batchUpdate(
-                "INSERT INTO skill_categories (name) " +
-                        "VALUES (?)",
+                "INSERT INTO skill_categories (name, color) " +
+                        "VALUES (?, ?)",
                 skillCategories,
                 skillCategories.size(),
                 (ps, skillCategory) -> {
                     ps.setString(1, skillCategory.getName());
+                    ps.setString(2, skillCategory.getColor());
                 }
         );
     }
@@ -94,9 +97,11 @@ public class JdbcSkillCategoryRepository {
         jdbcTemplate.update(
                 "UPDATE skill_categories " +
                         "SET " +
-                        "name = ? " +
+                        "name = ?, " +
+                        "color = ? " +
                         "WHERE id = ? ",
                 skillCategory.getName(),
+                skillCategory.getColor(),
                 skillCategory.getId()
         );
 
