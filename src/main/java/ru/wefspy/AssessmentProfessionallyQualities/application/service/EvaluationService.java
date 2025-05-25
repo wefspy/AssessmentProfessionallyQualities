@@ -62,28 +62,13 @@ public class EvaluationService {
                 skillEval.feedback()
             );
             evaluations.add(evaluation);
-
-            // Get all evaluations for this user skill
-            List<Evaluation> allEvaluations = evaluationRepository.findAllByUserSkillId(userSkill.getId());
-            allEvaluations.add(evaluation); // Add the new evaluation
-
-            // Calculate average rating from all evaluations
-            double averageRating = allEvaluations.stream()
-                    .mapToInt(e -> e.getEvaluation())
-                    .average()
-                    .orElse(skillEval.rating());
-
-            // Update user skill rating with the average
-            userSkill.setRating((short) Math.round(averageRating));
-            userSkillRepository.update(userSkill);
         }
 
         // Save all evaluations
         evaluationRepository.saveAll(evaluations);
 
-        // Update task status
-        task.setStatus(TaskStatus.RATED);
-        taskRepository.update(task);
+        // Update task status to RATED
+        taskRepository.updateStatus(taskId, TaskStatus.RATED);
     }
 
     public Collection<SkillDto> getSkillsForEvaluation(Long taskId) {

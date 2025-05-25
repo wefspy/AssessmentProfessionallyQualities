@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.wefspy.AssessmentProfessionallyQualities.domain.enums.TaskStatus;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Task;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.TaskRowMapper;
 
@@ -153,6 +154,14 @@ public class JdbcTaskRepository {
                 id
         );
         return count != null && count > 0;
+    }
+
+    public void updateStatus(Long taskId, TaskStatus status) {
+        jdbcTemplate.update(
+                "UPDATE tasks SET status = ?::task_status WHERE id = ?",
+                status.name(),
+                taskId
+        );
     }
 }
 
