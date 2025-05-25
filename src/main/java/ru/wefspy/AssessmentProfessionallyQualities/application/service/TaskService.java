@@ -12,9 +12,11 @@ import ru.wefspy.AssessmentProfessionallyQualities.application.exception.TaskNot
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Task;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.TeamMember;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
+import ru.wefspy.AssessmentProfessionallyQualities.domain.model.SkillCategory;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcTaskRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcTeamMemberRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserInfoRepository;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcSkillCategoryRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -25,13 +27,16 @@ public class TaskService {
     private final JdbcTaskRepository taskRepository;
     private final JdbcTeamMemberRepository teamMemberRepository;
     private final JdbcUserInfoRepository userInfoRepository;
+    private final JdbcSkillCategoryRepository skillCategoryRepository;
 
     public TaskService(JdbcTaskRepository taskRepository,
                       JdbcTeamMemberRepository teamMemberRepository,
-                      JdbcUserInfoRepository userInfoRepository) {
+                      JdbcUserInfoRepository userInfoRepository,
+                      JdbcSkillCategoryRepository skillCategoryRepository) {
         this.taskRepository = taskRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userInfoRepository = userInfoRepository;
+        this.skillCategoryRepository = skillCategoryRepository;
     }
 
     public TaskWithMembersDto createTask(CreateTaskRequest request) {
@@ -229,12 +234,18 @@ public class TaskService {
         if (member == null || userInfo == null) {
             return null;
         }
+
+        SkillCategory category = skillCategoryRepository.findById(member.getSkillCategoryId()).orElse(null);
+        String categoryName = category != null ? category.getName() : null;
+        String categoryColor = category != null ? category.getColor() : null;
+
         return new TeamMemberInfoDto(
-                userInfo.getId(),
+                member.getId(),
                 userInfo.getFirstName(),
                 userInfo.getMiddleName(),
                 userInfo.getLastName(),
-                member.getRole()
+                categoryName,
+                categoryColor
         );
     }
 } 

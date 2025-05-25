@@ -13,7 +13,8 @@ public class SkillCategoryRowMapper implements RowMapper<SkillCategory> {
     public SkillCategory mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new SkillCategory(
                 rs.getLong("id"),
-                rs.getString("name")
+                rs.getString("name"),
+                rs.getString("color")
         );
     }
 }
