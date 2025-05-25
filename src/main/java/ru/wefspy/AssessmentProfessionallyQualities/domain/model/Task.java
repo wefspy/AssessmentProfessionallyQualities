@@ -7,9 +7,9 @@ import java.util.Objects;
 
 public class Task {
     private Long id;
-    private Long evaluatorId;
-    private Long assigneeId;
-    private Long leadId;
+    private Long evaluatorMemberId;
+    private Long assigneeMemberId;
+    private Long leadMemberId;
     private String title;
     private String description;
     private LocalDate deadlineCompletion;
@@ -17,16 +17,16 @@ public class Task {
 
     public Task() {}
 
-    public Task(Long evaluatorId,
-                Long assigneeId,
-                Long leadId,
+    public Task(Long evaluatorMemberId,
+                Long assigneeMemberId,
+                Long leadMemberId,
                 String title,
                 String description,
                 LocalDate deadlineCompletion,
                 TaskStatus status) {
-        setEvaluatorId(evaluatorId);
-        setAssigneeId(assigneeId);
-        setLeadId(leadId);
+        setEvaluatorMemberId(evaluatorMemberId);
+        setAssigneeMemberId(assigneeMemberId);
+        setLeadMemberId(leadMemberId);
         setTitle(title);
         setDescription(description);
         setDeadlineCompletion(deadlineCompletion);
@@ -34,14 +34,14 @@ public class Task {
     }
 
     public Task(Long id,
-                Long evaluatorId,
-                Long assigneeId,
-                Long leadId,
+                Long evaluatorMemberId,
+                Long assigneeMemberId,
+                Long leadMemberId,
                 String title,
                 String description,
                 LocalDate deadlineCompletion,
                 TaskStatus status) {
-        this(evaluatorId, assigneeId, leadId, title, description, deadlineCompletion, status);
+        this(evaluatorMemberId, assigneeMemberId, leadMemberId, title, description, deadlineCompletion, status);
         setId(id);
     }
 
@@ -53,28 +53,28 @@ public class Task {
         this.id = id;
     }
 
-    public Long getEvaluatorId() {
-        return evaluatorId;
+    public Long getEvaluatorMemberId() {
+        return evaluatorMemberId;
     }
 
-    public void setEvaluatorId(Long evaluatorId) {
-        this.evaluatorId = evaluatorId;
+    public void setEvaluatorMemberId(Long evaluatorMemberId) {
+        this.evaluatorMemberId = evaluatorMemberId;
     }
 
-    public Long getAssigneeId() {
-        return assigneeId;
+    public Long getAssigneeMemberId() {
+        return assigneeMemberId;
     }
 
-    public void setAssigneeId(Long assigneeId) {
-        this.assigneeId = assigneeId;
+    public void setAssigneeMemberId(Long assigneeMemberId) {
+        this.assigneeMemberId = assigneeMemberId;
     }
 
-    public Long getLeadId() {
-        return leadId;
+    public Long getLeadMemberId() {
+        return leadMemberId;
     }
 
-    public void setLeadId(Long leadId) {
-        this.leadId = leadId;
+    public void setLeadMemberId(Long leadMemberId) {
+        this.leadMemberId = leadMemberId;
     }
 
     public String getTitle() {
@@ -128,9 +128,9 @@ public class Task {
     public String toString() {
         return "Task{" +
                 "id=" + id +
-                ", evaluatorId=" + evaluatorId +
-                ", assigneeId=" + assigneeId +
-                ", leadId=" + leadId +
+                ", evaluatorMemberId=" + evaluatorMemberId +
+                ", assigneeMemberId=" + assigneeMemberId +
+                ", leadMemberId=" + leadMemberId +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", deadlineCompletion=" + deadlineCompletion +

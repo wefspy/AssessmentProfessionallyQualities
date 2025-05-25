@@ -1,5 +1,8 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -10,6 +13,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.TaskRow
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,13 +36,13 @@ public class JdbcTaskRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO tasks (evaluator_id, assignee_id, lead_id, title, description, deadline_completion, status) " +
+                "INSERT INTO tasks (evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 new String[]{"id"}
             );
-            ps.setLong(1, task.getEvaluatorId());
-            ps.setLong(2, task.getAssigneeId());
-            ps.setLong(3, task.getLeadId());
+            ps.setLong(1, task.getEvaluatorMemberId());
+            ps.setLong(2, task.getAssigneeMemberId());
+            ps.setLong(3, task.getLeadMemberId());
             ps.setString(4, task.getTitle());
             ps.setString(5, task.getDescription());
             ps.setDate(6, Date.valueOf(task.getDeadlineCompletion()));
@@ -52,14 +56,14 @@ public class JdbcTaskRepository {
 
     public void saveAll(Collection<Task> tasks) {
         jdbcTemplate.batchUpdate(
-                "INSERT INTO tasks (evaluator_id, assignee_id, lead_id, title, description, deadline_completion, status) " +
+                "INSERT INTO tasks (evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?) ",
                 tasks,
                 tasks.size(),
                 (ps, task) -> {
-                    ps.setLong(1, task.getEvaluatorId());
-                    ps.setLong(2, task.getAssigneeId());
-                    ps.setLong(3, task.getLeadId());
+                    ps.setLong(1, task.getEvaluatorMemberId());
+                    ps.setLong(2, task.getAssigneeMemberId());
+                    ps.setLong(3, task.getLeadMemberId());
                     ps.setString(4, task.getTitle());
                     ps.setString(5, task.getDescription());
                     ps.setDate(6, Date.valueOf(task.getDeadlineCompletion()));
@@ -84,17 +88,17 @@ public class JdbcTaskRepository {
         jdbcTemplate.update(
                 "UPDATE tasks " +
                         "SET " +
-                        "evaluator_id = ?," +
-                        "assignee_id = ?, " +
-                        "lead_id = ?, " +
+                        "evaluator_member_id = ?," +
+                        "assignee_member_id = ?, " +
+                        "lead_member_id = ?, " +
                         "title = ?, " +
                         "description = ?, " +
                         "deadline_completion = ?, " +
                         "status = ? " +
                         "WHERE id = ?",
-                task.getEvaluatorId(),
-                task.getAssigneeId(),
-                task.getLeadId(),
+                task.getEvaluatorMemberId(),
+                task.getAssigneeMemberId(),
+                task.getLeadMemberId(),
                 task.getTitle(),
                 task.getDescription(),
                 Date.valueOf(task.getDeadlineCompletion()),
@@ -109,3 +113,4 @@ public class JdbcTaskRepository {
         jdbcTemplate.update("DELETE FROM tasks WHERE id = ?", id);
     }
 }
+
