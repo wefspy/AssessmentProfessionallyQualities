@@ -4,7 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterRequestDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserProfileDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterResponseDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.RoleNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UsernameAlreadyTakenException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.mapper.UserProfileMapper;
@@ -13,6 +13,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.domain.model.User;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserRole;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcRoleRepository;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserInfoRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserRoleRepository;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.RoleEnum;
@@ -26,17 +27,20 @@ import java.util.stream.Collectors;
 public class RegistrationService {
 
     private final JdbcUserRepository userRepository;
+    private final JdbcUserInfoRepository userInfoRepository;
     private final JdbcRoleRepository roleRepository;
     private final JdbcUserRoleRepository userRoleRepository;
     private final UserProfileMapper userProfileMapper;
     private final PasswordEncoder passwordEncoder;
 
     public RegistrationService(JdbcUserRepository userRepository,
+                               JdbcUserInfoRepository userInfoRepository,
                                JdbcRoleRepository roleRepository,
                                JdbcUserRoleRepository userRoleRepository,
                                UserProfileMapper userProfileMapper,
                                PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userInfoRepository = userInfoRepository;
         this.roleRepository = roleRepository;
         this.userRoleRepository = userRoleRepository;
         this.userProfileMapper = userProfileMapper;
@@ -44,7 +48,7 @@ public class RegistrationService {
     }
 
     @Transactional
-    public UserProfileDto register(RegisterRequestDto dto) {
+    public RegisterResponseDto register(RegisterRequestDto dto) {
         validateUsername(dto.username());
 
         User user = createUser(dto);
@@ -52,7 +56,7 @@ public class RegistrationService {
         Collection<Role> roles = fetchBasicRolesWithRoleUser();
         assignRolesToUser(user, roles);
 
-        return userProfileMapper.toDto(user, userInfo, roles);
+        return userProfileMapper.toDto(user, roles);
     }
 
     private void validateUsername(String username) {
@@ -67,18 +71,19 @@ public class RegistrationService {
                 passwordEncoder.encode(dto.password())
         );
 
-        userRepository.save(user);
-        return user;
+        return userRepository.save(user);
     }
 
     private UserInfo createUserInfo(User user, RegisterRequestDto dto) {
-        return new UserInfo(
+        UserInfo userInfo = new UserInfo(
                 user.getId(),
                 dto.email(),
                 dto.firstName(),
                 dto.middleName(),
                 dto.lastName()
         );
+
+        return userInfoRepository.save(userInfo);
     }
 
     private Collection<Role> fetchBasicRolesWithRoleUser() {

@@ -71,6 +71,16 @@ public class JdbcTeamMemberRepository {
         return teamMembers.stream().findFirst();
     }
 
+    public List<TeamMember> findAllByUserId(Long userId) {
+        return jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM team_members " +
+                        "WHERE user_id = ?",
+                teamMemberRowMapper,
+                userId
+        );
+    }
+
     public TeamMember update(TeamMember teamMember) {
         jdbcTemplate.update(
                 "UPDATE team_members " +

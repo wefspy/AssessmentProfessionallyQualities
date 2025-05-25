@@ -1,24 +1,23 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserInfoRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class JdbcUsersInfoRepository {
+public class JdbcUserInfoRepository {
     private final JdbcTemplate jdbcTemplate;
     private final UserInfoRowMapper userInfoRowMapper;
 
-    public JdbcUsersInfoRepository(JdbcTemplate jdbcTemplate,
-                                   UserInfoRowMapper userInfoRowMapper) {
+    public JdbcUserInfoRepository(JdbcTemplate jdbcTemplate,
+                                UserInfoRowMapper userInfoRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.userInfoRowMapper = userInfoRowMapper;
     }
@@ -28,25 +27,38 @@ public class JdbcUsersInfoRepository {
     }
 
     public UserInfo save(UserInfo userInfo) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO users_info (id, main_skill_category_id, email, first_name, middle_name, last_name, course_number, education) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    new String[]{"id"}
+                "INSERT INTO users_info (id, main_skill_category_id, email, first_name, middle_name, last_name, course_number, education) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             );
             ps.setLong(1, userInfo.getId());
-            ps.setLong(2, userInfo.getMainSkillCategoryId());
+            if (userInfo.getMainSkillCategoryId() != null) {
+                ps.setLong(2, userInfo.getMainSkillCategoryId());
+            } else {
+                ps.setNull(2, Types.NULL);
+            }
             ps.setString(3, userInfo.getEmail());
             ps.setString(4, userInfo.getFirstName());
-            ps.setString(5, userInfo.getMiddleName());
+            if (userInfo.getMiddleName() != null) {
+                ps.setString(5, userInfo.getMiddleName());
+            } else {
+                ps.setNull(5, Types.NULL);
+            }
             ps.setString(6, userInfo.getLastName());
-            ps.setShort(7, userInfo.getCourseNumber());
-            ps.setString(8, userInfo.getEducation().name());
+            if (userInfo.getCourseNumber() != null) {
+                ps.setShort(7, userInfo.getCourseNumber());
+            } else {
+                ps.setNull(7, Types.NULL);
+            }
+            if (userInfo.getEducation() != null) {
+                ps.setString(8, userInfo.getEducation().name());
+            } else {
+                ps.setNull(8, Types.NULL);
+            }
             return ps;
-        }, keyHolder);
+        });
 
-        userInfo.setId(keyHolder.getKey().longValue());
         return userInfo;
     }
 
@@ -58,13 +70,29 @@ public class JdbcUsersInfoRepository {
                 usersInfo.size(),
                 (ps, userInfo) -> {
                     ps.setLong(1, userInfo.getId());
-                    ps.setLong(2, userInfo.getMainSkillCategoryId());
+                    if (userInfo.getMainSkillCategoryId() != null) {
+                        ps.setLong(2, userInfo.getMainSkillCategoryId());
+                    } else {
+                        ps.setNull(2, Types.NULL);
+                    }
                     ps.setString(3, userInfo.getEmail());
                     ps.setString(4, userInfo.getFirstName());
-                    ps.setString(5, userInfo.getMiddleName());
+                    if (userInfo.getMiddleName() != null) {
+                        ps.setString(5, userInfo.getMiddleName());
+                    } else {
+                        ps.setNull(5, Types.NULL);
+                    }
                     ps.setString(6, userInfo.getLastName());
-                    ps.setShort(7, userInfo.getCourseNumber());
-                    ps.setString(8, userInfo.getEducation().name());
+                    if (userInfo.getCourseNumber() != null) {
+                        ps.setShort(7, userInfo.getCourseNumber());
+                    } else {
+                        ps.setNull(7, Types.NULL);
+                    }
+                    if (userInfo.getEducation() != null) {
+                        ps.setString(8, userInfo.getEducation().name());
+                    } else {
+                        ps.setNull(8, Types.NULL);
+                    }
                 }
         );
     }
@@ -79,6 +107,16 @@ public class JdbcUsersInfoRepository {
         );
 
         return usersInfo.stream().findFirst();
+    }
+
+    public Optional<UserInfo> findByUserId(Long userId) {
+        List<UserInfo> userInfos = jdbcTemplate.query(
+                "SELECT * FROM users_info WHERE id = ?",
+                userInfoRowMapper,
+                userId
+        );
+
+        return userInfos.stream().findFirst();
     }
 
     public UserInfo update(UserInfo userInfo) {

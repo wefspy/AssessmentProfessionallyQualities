@@ -1,13 +1,16 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.SkillCategory;
-import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.SkillCategoryRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -15,16 +18,39 @@ import java.util.Optional;
 @Repository
 public class JdbcSkillCategoryRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final SkillCategoryRowMapper skillCategoryRowMapper;
 
-    public JdbcSkillCategoryRepository(JdbcTemplate jdbcTemplate,
-                                       SkillCategoryRowMapper skillCategoryRowMapper) {
+    private final RowMapper<SkillCategory> rowMapper = (ResultSet rs, int rowNum) -> {
+        SkillCategory category = new SkillCategory();
+        category.setId(rs.getLong("id"));
+        category.setName(rs.getString("name"));
+        return category;
+    };
+
+    public JdbcSkillCategoryRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.skillCategoryRowMapper = skillCategoryRowMapper;
+    }
+
+    public List<SkillCategory> findAll() {
+        return jdbcTemplate.query(
+                "SELECT * FROM skill_categories",
+                rowMapper
+        );
+    }
+
+    public List<SkillCategory> findAll(Pageable pageable) {
+        return jdbcTemplate.query(
+                "SELECT * FROM skill_categories ORDER BY id LIMIT ? OFFSET ?",
+                rowMapper,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
     }
 
     public Long count() {
-        return jdbcTemplate.queryForObject("SELECT count(*) FROM skill_categories", Long.class);
+        return jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM skill_categories",
+                Long.class
+        );
     }
 
     public SkillCategory save(SkillCategory skillCategory) {
@@ -56,15 +82,12 @@ public class JdbcSkillCategoryRepository {
     }
 
     public Optional<SkillCategory> findById(Long id) {
-        List<SkillCategory> skillCategories = jdbcTemplate.query(
-                "SELECT * " +
-                        "FROM skill_categories " +
-                        "WHERE id = ? ",
-                skillCategoryRowMapper,
+        List<SkillCategory> result = jdbcTemplate.query(
+                "SELECT * FROM skill_categories WHERE id = ?",
+                rowMapper,
                 id
         );
-
-        return skillCategories.stream().findFirst();
+        return result.stream().findFirst();
     }
 
     public SkillCategory update(SkillCategory skillCategory) {

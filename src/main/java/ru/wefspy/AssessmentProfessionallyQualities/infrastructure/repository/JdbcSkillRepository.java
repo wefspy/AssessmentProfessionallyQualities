@@ -1,5 +1,6 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -24,7 +25,34 @@ public class JdbcSkillRepository {
     }
 
     public Long count() {
-        return jdbcTemplate.queryForObject("SELECT count(*) FROM skills ", Long.class);
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM skills", Long.class);
+    }
+
+    public Long countByNameContainingIgnoreCase(String query) {
+        return jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM skills WHERE LOWER(name) LIKE LOWER(?)",
+                Long.class,
+                "%" + query + "%"
+        );
+    }
+
+    public List<Skill> findAll(Pageable pageable) {
+        return jdbcTemplate.query(
+                "SELECT * FROM skills ORDER BY id LIMIT ? OFFSET ?",
+                skillRowMapper,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
+    }
+
+    public List<Skill> findByNameContainingIgnoreCase(String query, Pageable pageable) {
+        return jdbcTemplate.query(
+                "SELECT * FROM skills WHERE LOWER(name) LIKE LOWER(?) ORDER BY id LIMIT ? OFFSET ?",
+                skillRowMapper,
+                "%" + query + "%",
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
     }
 
     public Skill save(Skill skill) {

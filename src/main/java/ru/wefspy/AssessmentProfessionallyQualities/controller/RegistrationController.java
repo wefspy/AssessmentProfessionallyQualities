@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterRequestDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserProfileDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.RegisterResponseDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.RegistrationService;
 
 @RestController
@@ -26,7 +26,7 @@ public class RegistrationController {
 
     @Operation(summary = "Регистрация пользователя")
     @ApiResponse(responseCode = "200", description = "Пользователь зарегистрирован", content = {
-            @Content(mediaType = "application/json", schema = @Schema(implementation = UserProfileDto.class))
+            @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterResponseDto.class))
     })
     @ApiResponse(responseCode = "400", description = "Некорректные параметры запроса", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
@@ -41,8 +41,8 @@ public class RegistrationController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
     })
     @PostMapping
-    public ResponseEntity<UserProfileDto> createUserWithInfo(@Valid @RequestBody RegisterRequestDto registerDto) {
-        UserProfileDto userProfileInfoDto = registrationService.register(registerDto);
+    public ResponseEntity<RegisterResponseDto> createUserWithInfo(@Valid @RequestBody RegisterRequestDto registerDto) {
+        RegisterResponseDto userProfileInfoDto = registrationService.register(registerDto);
         return ResponseEntity.status(200)
                 .body(userProfileInfoDto);
     }

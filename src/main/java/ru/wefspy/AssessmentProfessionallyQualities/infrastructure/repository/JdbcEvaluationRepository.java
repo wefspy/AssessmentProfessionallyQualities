@@ -7,6 +7,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Evaluation;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.EvaluationRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,15 @@ public class JdbcEvaluationRepository {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM evaluations", Long.class);
     }
 
+    public boolean existsByUserSkillId(Long userSkillId) {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM evaluations WHERE user_skill_id = ?",
+                Long.class,
+                userSkillId
+        );
+        return count != null && count > 0;
+    }
+
     public Evaluation save(Evaluation evaluation) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -37,7 +47,11 @@ public class JdbcEvaluationRepository {
             ps.setLong(1, evaluation.getTaskId());
             ps.setLong(2, evaluation.getUserSkillId());
             ps.setShort(3, evaluation.getEvaluation());
-            ps.setString(4, evaluation.getFeedback());
+            if (evaluation.getFeedback() != null) {
+                ps.setString(4, evaluation.getFeedback());
+            } else {
+                ps.setNull(4, Types.NULL);
+            }
             return ps;
         }, keyHolder);
 
