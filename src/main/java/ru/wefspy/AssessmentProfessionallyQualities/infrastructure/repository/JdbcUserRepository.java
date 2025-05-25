@@ -1,5 +1,6 @@
 package ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
@@ -105,5 +106,14 @@ public class JdbcUserRepository {
 
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM users WHERE id = ? ", id);
+    }
+
+    public List<User> findAll(Pageable pageable) {
+        return jdbcTemplate.query(
+                "SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?",
+                userRowMapper,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
     }
 }
