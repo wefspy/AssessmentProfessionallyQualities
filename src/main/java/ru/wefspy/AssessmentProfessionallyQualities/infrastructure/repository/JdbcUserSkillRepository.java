@@ -27,6 +27,16 @@ public class JdbcUserSkillRepository {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM users_skills", Long.class);
     }
 
+    public Optional<UserSkill> findByUserIdAndSkillId(Long userId, Long skillId) {
+        List<UserSkill> userSkills = jdbcTemplate.query(
+                "SELECT * FROM users_skills WHERE user_id = ? AND skill_id = ?",
+                userSkillRowMapper,
+                userId,
+                skillId
+        );
+        return userSkills.stream().findFirst();
+    }
+
     public UserSkill save(UserSkill userSkill) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -63,7 +73,7 @@ public class JdbcUserSkillRepository {
         List<UserSkill> usersSkills = jdbcTemplate.query(
                 "SELECT * " +
                         "FROM users_skills " +
-                        "WHERE user_id = ?",
+                        "WHERE id = ?",
                 userSkillRowMapper,
                 id
         );

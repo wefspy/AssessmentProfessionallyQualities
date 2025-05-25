@@ -2,18 +2,12 @@ package ru.wefspy.AssessmentProfessionallyQualities.application.service;
 
 import org.springframework.stereotype.Service;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.*;
+import ru.wefspy.AssessmentProfessionallyQualities.application.exception.SkillCategoryNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.UserNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.*;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -39,6 +33,41 @@ public class UserService {
         this.userSkillRepository = userSkillRepository;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
+    }
+
+    public void setMainSkillCategory(Long userId, SetMainSkillCategoryRequest request) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User with id %d not found", userId)
+                ));
+
+        skillCategoryRepository.findById(request.skillCategoryId())
+                .orElseThrow(() -> new SkillCategoryNotFoundException(
+                        String.format("Skill category with id %d not found", request.skillCategoryId())
+                ));
+
+        UserInfo userInfo = userInfoRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User info for user with id %d not found", userId)
+                ));
+
+        userInfo.setMainSkillCategoryId(request.skillCategoryId());
+        userInfoRepository.update(userInfo);
+    }
+
+    public void removeMainSkillCategory(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User with id %d not found", userId)
+                ));
+
+        UserInfo userInfo = userInfoRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        String.format("User info for user with id %d not found", userId)
+                ));
+
+        userInfo.setMainSkillCategoryId(null);
+        userInfoRepository.update(userInfo);
     }
 
     public UserProfileDto getProfile(Long userId) {

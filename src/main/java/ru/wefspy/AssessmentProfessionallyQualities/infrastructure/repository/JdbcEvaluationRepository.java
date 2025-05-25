@@ -27,6 +27,15 @@ public class JdbcEvaluationRepository {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM evaluations", Long.class);
     }
 
+    public boolean existsByUserSkillId(Long userSkillId) {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM evaluations WHERE user_skill_id = ?",
+                Long.class,
+                userSkillId
+        );
+        return count != null && count > 0;
+    }
+
     public Evaluation save(Evaluation evaluation) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
