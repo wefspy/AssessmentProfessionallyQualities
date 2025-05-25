@@ -6,23 +6,24 @@ public class TeamMember {
     private Long id;
     private Long teamId;
     private Long userId;
-    private String role;
+    private Long skillCategoryId;
+    private String skillCategoryName;
 
     public TeamMember() {}
 
     public TeamMember(Long teamId,
                       Long userId,
-                      String role) {
+                      Long skillCategoryId) {
         setTeamId(teamId);
         setUserId(userId);
-        setRole(role);
+        setSkillCategoryId(skillCategoryId);
     }
 
     public TeamMember(Long id,
                       Long teamId,
                       Long userId,
-                      String role) {
-        this(teamId, userId, role);
+                      Long skillCategoryId) {
+        this(teamId, userId, skillCategoryId);
         setId(id);
     }
 
@@ -50,12 +51,25 @@ public class TeamMember {
         this.userId = userId;
     }
 
-    public String getRole() {
-        return role;
+    public Long getSkillCategoryId() {
+        return skillCategoryId;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setSkillCategoryId(Long skillCategoryId) {
+        this.skillCategoryId = skillCategoryId;
+    }
+
+    public String getSkillCategoryName() {
+        return skillCategoryName;
+    }
+
+    public void setSkillCategoryName(String skillCategoryName) {
+        this.skillCategoryName = skillCategoryName;
+    }
+
+    // This method is used to maintain compatibility with old code that expects getRole()
+    public String getRole() {
+        return skillCategoryName;
     }
 
     @Override
@@ -79,7 +93,8 @@ public class TeamMember {
                 "id=" + id +
                 ", teamId=" + teamId +
                 ", userId=" + userId +
-                ", role='" + role + '\'' +
+                ", skillCategoryId=" + skillCategoryId +
+                ", skillCategoryName='" + skillCategoryName + '\'' +
                 '}';
     }
 }

@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class JdbcTeamMemberRepository {
@@ -36,7 +35,10 @@ public class JdbcTeamMemberRepository {
 
         String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
         return jdbcTemplate.query(
-                String.format("SELECT * FROM team_members WHERE id IN (%s)", placeholders),
+                String.format("SELECT tm.*, sc.name as skill_category_name " +
+                        "FROM team_members tm " +
+                        "LEFT JOIN skill_categories sc ON tm.skill_category_id = sc.id " +
+                        "WHERE tm.id IN (%s)", placeholders),
                 teamMemberRowMapper,
                 ids.toArray()
         );
@@ -46,13 +48,13 @@ public class JdbcTeamMemberRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO team_members (team_id, user_id, role) " +
+                "INSERT INTO team_members (team_id, user_id, skill_category_id) " +
                         "VALUES (?, ?, ?)",
                 new String[]{"id"}
             );
             ps.setLong(1, teamMember.getTeamId());
             ps.setLong(2, teamMember.getUserId());
-            ps.setString(3, teamMember.getRole());
+            ps.setLong(3, teamMember.getSkillCategoryId());
             return ps;
         }, keyHolder);
 
@@ -62,23 +64,24 @@ public class JdbcTeamMemberRepository {
 
     public void saveAll(Collection<TeamMember> teamMembers) {
         jdbcTemplate.batchUpdate(
-                "INSERT INTO team_members (team_id, user_id, role) " +
+                "INSERT INTO team_members (team_id, user_id, skill_category_id) " +
                         "VALUES (?, ?, ?) ",
                 teamMembers,
                 teamMembers.size(),
                 (ps, teamMember) -> {
                     ps.setLong(1, teamMember.getTeamId());
                     ps.setLong(2, teamMember.getUserId());
-                    ps.setString(3, teamMember.getRole());
+                    ps.setLong(3, teamMember.getSkillCategoryId());
                 }
         );
     }
 
     public Optional<TeamMember> findById(Long id) {
         List<TeamMember> teamMembers = jdbcTemplate.query(
-                "SELECT * " +
-                        "FROM team_members " +
-                        "WHERE id = ?",
+                "SELECT tm.*, sc.name as skill_category_name " +
+                        "FROM team_members tm " +
+                        "LEFT JOIN skill_categories sc ON tm.skill_category_id = sc.id " +
+                        "WHERE tm.id = ?",
                 teamMemberRowMapper,
                 id
         );
@@ -88,9 +91,10 @@ public class JdbcTeamMemberRepository {
 
     public List<TeamMember> findAllByUserId(Long userId) {
         return jdbcTemplate.query(
-                "SELECT * " +
-                        "FROM team_members " +
-                        "WHERE user_id = ?",
+                "SELECT tm.*, sc.name as skill_category_name " +
+                        "FROM team_members tm " +
+                        "LEFT JOIN skill_categories sc ON tm.skill_category_id = sc.id " +
+                        "WHERE tm.user_id = ?",
                 teamMemberRowMapper,
                 userId
         );
@@ -102,11 +106,11 @@ public class JdbcTeamMemberRepository {
                         "SET " +
                         "team_id = ?, " +
                         "user_id = ?, " +
-                        "role = ? " +
+                        "skill_category_id = ? " +
                         "WHERE id = ?",
                 teamMember.getTeamId(),
                 teamMember.getUserId(),
-                teamMember.getRole(),
+                teamMember.getSkillCategoryId(),
                 teamMember.getId()
         );
 

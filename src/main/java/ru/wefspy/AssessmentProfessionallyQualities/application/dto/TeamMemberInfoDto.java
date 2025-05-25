@@ -5,5 +5,5 @@ public record TeamMemberInfoDto(
         String firstName,
         String middleName,
         String lastName,
-        String role
+        String skillCategoryName
 ) {} 
