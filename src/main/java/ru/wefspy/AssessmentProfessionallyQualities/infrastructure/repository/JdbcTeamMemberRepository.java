@@ -9,8 +9,10 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.TeamMem
 
 import java.sql.PreparedStatement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class JdbcTeamMemberRepository {
@@ -25,6 +27,19 @@ public class JdbcTeamMemberRepository {
 
     public Long count() {
         return jdbcTemplate.queryForObject("SELECT count(*) FROM team_members", Long.class);
+    }
+
+    public List<TeamMember> findAllByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        return jdbcTemplate.query(
+                String.format("SELECT * FROM team_members WHERE id IN (%s)", placeholders),
+                teamMemberRowMapper,
+                ids.toArray()
+        );
     }
 
     public TeamMember save(TeamMember teamMember) {
