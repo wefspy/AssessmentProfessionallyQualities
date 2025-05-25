@@ -54,10 +54,32 @@ public class JdbcTaskRepository {
         }
 
         String placeholders = String.join(",", Collections.nCopies(memberIds.size(), "?"));
+        
+        // Build the ORDER BY clause based on the sort properties
+        StringBuilder orderBy = new StringBuilder();
+        if (pageable.getSort().isSorted()) {
+            orderBy.append("ORDER BY ");
+            pageable.getSort().forEach(order -> {
+                switch (order.getProperty()) {
+                    case "status" -> orderBy.append("status").append(order.isAscending() ? " ASC" : " DESC");
+                    case "deadlineCompletion" -> orderBy.append("deadline_completion").append(order.isAscending() ? " ASC" : " DESC");
+                    default -> orderBy.append("deadline_completion ASC"); // default sort
+                }
+                orderBy.append(", ");
+            });
+            // Remove trailing comma and space
+            if (orderBy.length() > 2) {
+                orderBy.setLength(orderBy.length() - 2);
+            }
+        } else {
+            // Default sorting if none specified
+            orderBy.append("ORDER BY deadline_completion ASC");
+        }
+
         String sql = String.format(
-                "SELECT * FROM tasks WHERE evaluator_member_id IN (%s) " +
-                "ORDER BY deadline_completion LIMIT ? OFFSET ?",
-                placeholders
+                "SELECT * FROM tasks WHERE evaluator_member_id IN (%s) %s LIMIT ? OFFSET ?",
+                placeholders,
+                orderBy
         );
 
         Object[] params = new Object[memberIds.size() + 2];

@@ -55,7 +55,7 @@ public class TaskController {
     })
     @GetMapping("/my")
     public ResponseEntity<Page<TaskWithMembersDto>> getCurrentUserEvaluationTasks(
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable,
+            @ParameterObject @PageableDefault(size = 20, sort = "status") Pageable pageable,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(taskService.getTasksByEvaluatorId(userDetails.getId(), pageable));
     }
@@ -70,7 +70,7 @@ public class TaskController {
     @GetMapping("/evaluator/{userId}")
     public ResponseEntity<Page<TaskWithMembersDto>> getUserEvaluationTasks(
             @Parameter(description = "ID пользователя-оценщика") @PathVariable Long userId,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "status") Pageable pageable) {
         return ResponseEntity.ok(taskService.getTasksByEvaluatorId(userId, pageable));
     }
 
