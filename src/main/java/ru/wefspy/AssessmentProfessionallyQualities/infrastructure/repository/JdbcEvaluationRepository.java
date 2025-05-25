@@ -86,6 +86,14 @@ public class JdbcEvaluationRepository {
         return evaluations.stream().findFirst();
     }
 
+    public List<Evaluation> findAllByUserSkillId(Long userSkillId) {
+        return jdbcTemplate.query(
+                "SELECT * FROM evaluations WHERE user_skill_id = ?",
+                evaluationRowMapper,
+                userSkillId
+        );
+    }
+
     public Evaluation update(Evaluation evaluation) {
         jdbcTemplate.update(
                 "UPDATE evaluations " +
