@@ -11,11 +11,17 @@ import java.sql.SQLException;
 public class TeamMemberRowMapper implements RowMapper<TeamMember> {
     @Override
     public TeamMember mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new TeamMember(
+        TeamMember member = new TeamMember(
                 rs.getLong("id"),
                 rs.getLong("team_id"),
                 rs.getLong("user_id"),
-                rs.getString("role")
+                rs.getLong("skill_category_id")
         );
+        try {
+            member.setSkillCategoryName(rs.getString("skill_category_name"));
+        } catch (SQLException e) {
+            // Ignore if skill_category_name is not in the result set
+        }
+        return member;
     }
 }
