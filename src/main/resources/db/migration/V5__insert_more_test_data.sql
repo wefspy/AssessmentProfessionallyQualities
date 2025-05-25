@@ -94,30 +94,77 @@ SELECT setval('users_skills_seq', (SELECT MAX(id) FROM users_skills));
 
 INSERT INTO tasks (id, evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status)
 VALUES
-    (4, 4, 11, 4, 'Implement User Profile', 'Create user profile page with editing capabilities', '2024-04-15', 'IN_WAITING'),
-    (5, 5, 12, 5, 'Design Dashboard UI', 'Create responsive dashboard interface', '2024-04-20', 'IN_WAITING'),
-    (6, 6, 13, 6, 'Setup Monitoring System', 'Implement Prometheus and Grafana monitoring', '2024-04-25', 'IN_WAITING'),
-    (7, 8, 14, 8, 'Mobile App Testing', 'Perform comprehensive testing of mobile application', '2024-05-01', 'IN_WAITING'),
-    (8, 4, 15, 4, 'API Integration Tests', 'Write integration tests for REST API', '2024-05-05', 'IN_WAITING'),
-    (9, 5, 11, 5, 'Implement Search Feature', 'Add search functionality to the platform', '2024-05-10', 'IN_WAITING'),
-    (10, 6, 12, 6, 'Database Optimization', 'Optimize database queries and indexes', '2024-05-15', 'IN_WAITING'),
-    (11, 8, 13, 8, 'Security Audit', 'Perform security audit of the application', '2024-05-20', 'IN_WAITING'),
-    (12, 4, 14, 4, 'Push Notification System', 'Implement push notifications for mobile app', '2024-05-25', 'IN_WAITING'),
-    (13, 5, 15, 5, 'Performance Testing', 'Conduct load and stress testing', '2024-06-01', 'IN_WAITING');
+    -- Задачи для Backend команды
+    (4, 1, 2, 1, 'Implement User Profile', 'Create user profile page with editing capabilities', '2024-04-15', 'IN_WAITING'),
+    (5, 1, 2, 1, 'Add Password Reset', 'Implement password reset functionality with email confirmation', '2024-04-20', 'IN_WAITING'),
+    (6, 1, 2, 1, 'Optimize Database Queries', 'Review and optimize slow database queries', '2024-04-25', 'IN_WAITING'),
+    (7, 1, 3, 1, 'Setup Caching Layer', 'Implement Redis caching for frequently accessed data', '2024-05-01', 'IN_WAITING'),
+    (8, 1, 3, 1, 'API Rate Limiting', 'Implement rate limiting for public API endpoints', '2024-05-05', 'IN_WAITING'),
+    (9, 1, 2, 1, 'Database Backup System', 'Setup automated database backup system', '2024-05-10', 'IN_WAITING'),
+    (10, 1, 3, 1, 'Logging System', 'Implement centralized logging system with ELK stack', '2024-05-15', 'IN_WAITING'),
+
+    -- Задачи для Frontend команды
+    (11, 2, 1, 2, 'Design Dashboard UI', 'Create responsive dashboard interface', '2024-04-20', 'IN_WAITING'),
+    (12, 2, 3, 2, 'Implement Dark Theme', 'Add dark theme support across all pages', '2024-04-25', 'IN_WAITING'),
+    (13, 2, 1, 2, 'Mobile Responsiveness', 'Ensure all pages are mobile-friendly', '2024-04-30', 'IN_WAITING'),
+    (14, 2, 3, 2, 'Performance Optimization', 'Optimize frontend performance and loading times', '2024-05-05', 'IN_WAITING'),
+    (15, 2, 1, 2, 'Add Data Visualization', 'Implement charts and graphs for analytics', '2024-05-10', 'IN_WAITING'),
+    (16, 2, 3, 2, 'Accessibility Improvements', 'Enhance website accessibility (WCAG compliance)', '2024-05-15', 'IN_WAITING'),
+    (17, 2, 1, 2, 'Unit Tests Coverage', 'Increase unit tests coverage for frontend code', '2024-05-20', 'IN_WAITING'),
+
+    -- Задачи для DevOps команды
+    (18, 3, 2, 3, 'Setup Monitoring System', 'Implement Prometheus and Grafana monitoring', '2024-04-25', 'IN_WAITING'),
+    (19, 3, 1, 3, 'Container Orchestration', 'Setup Kubernetes cluster for production', '2024-04-30', 'IN_WAITING'),
+    (20, 3, 2, 3, 'CI/CD Pipeline', 'Improve CI/CD pipeline with automated testing', '2024-05-05', 'IN_WAITING'),
+    (21, 3, 1, 3, 'Security Scanning', 'Implement automated security scanning in pipeline', '2024-05-10', 'IN_WAITING'),
+    (22, 3, 2, 3, 'Infrastructure as Code', 'Convert infrastructure setup to Terraform', '2024-05-15', 'IN_WAITING'),
+    (23, 3, 1, 3, 'Backup Strategy', 'Implement disaster recovery and backup strategy', '2024-05-20', 'IN_WAITING'),
+    (24, 3, 2, 3, 'Load Testing', 'Setup automated load testing with K6', '2024-05-25', 'IN_WAITING'),
+
+    -- Кросс-функциональные задачи
+    (25, 1, 2, 3, 'API Documentation', 'Update API documentation with new endpoints', '2024-05-01', 'IN_WAITING'),
+    (26, 2, 3, 1, 'Security Audit', 'Conduct security audit of the application', '2024-05-05', 'IN_WAITING'),
+    (27, 3, 1, 2, 'Performance Testing', 'Conduct load and stress testing', '2024-05-10', 'IN_WAITING'),
+    (28, 1, 3, 2, 'Code Review Process', 'Improve code review guidelines and process', '2024-05-15', 'IN_WAITING'),
+    (29, 2, 1, 3, 'Technical Debt', 'Address critical technical debt items', '2024-05-20', 'IN_WAITING'),
+    (30, 3, 2, 1, 'Dependency Updates', 'Update all dependencies to latest versions', '2024-05-25', 'IN_WAITING'),
+
+    -- Задачи по улучшению качества
+    (31, 1, 2, 3, 'Code Quality Gates', 'Setup SonarQube quality gates', '2024-05-05', 'IN_WAITING'),
+    (32, 2, 3, 1, 'E2E Testing', 'Implement end-to-end testing with Cypress', '2024-05-10', 'IN_WAITING'),
+    (33, 3, 1, 2, 'Performance Metrics', 'Setup performance monitoring and alerts', '2024-05-15', 'IN_WAITING'),
+    (34, 1, 3, 2, 'Documentation Update', 'Update technical documentation', '2024-05-20', 'IN_WAITING'),
+    (35, 2, 1, 3, 'Accessibility Testing', 'Implement automated accessibility testing', '2024-05-25', 'IN_WAITING'),
+    (36, 3, 2, 1, 'Security Compliance', 'Ensure GDPR and security compliance', '2024-05-30', 'IN_WAITING'),
+
+    -- Задачи по оптимизации
+    (37, 1, 2, 3, 'Database Indexing', 'Optimize database indexes for performance', '2024-05-10', 'IN_WAITING'),
+    (38, 2, 3, 1, 'Frontend Bundling', 'Optimize frontend bundle size', '2024-05-15', 'IN_WAITING'),
+    (39, 3, 1, 2, 'Cache Strategy', 'Implement efficient caching strategy', '2024-05-20', 'IN_WAITING'),
+    (40, 1, 3, 2, 'API Optimization', 'Optimize API response times', '2024-05-25', 'IN_WAITING'),
+    (41, 2, 1, 3, 'Image Optimization', 'Implement image optimization pipeline', '2024-05-30', 'IN_WAITING'),
+    (42, 3, 2, 1, 'Resource Usage', 'Optimize server resource usage', '2024-06-05', 'IN_WAITING'),
+
+    -- Задачи по безопасности
+    (43, 1, 2, 3, 'Security Headers', 'Implement security headers', '2024-05-15', 'IN_WAITING'),
+    (44, 2, 3, 1, 'XSS Prevention', 'Implement XSS prevention measures', '2024-05-20', 'IN_WAITING'),
+    (45, 3, 1, 2, 'CSRF Protection', 'Enhance CSRF protection', '2024-05-25', 'IN_WAITING'),
+    (46, 1, 3, 2, 'SQL Injection', 'Audit and prevent SQL injection', '2024-05-30', 'IN_WAITING'),
+    (47, 2, 1, 3, 'Authentication', 'Enhance authentication security', '2024-06-05', 'IN_WAITING'),
+    (48, 3, 2, 1, 'Vulnerability Scan', 'Regular vulnerability scanning', '2024-06-10', 'IN_WAITING');
 
 SELECT setval('tasks_seq', (SELECT MAX(id) FROM tasks));
 
 INSERT INTO evaluations (id, task_id, user_skill_id, evaluation, feedback)
 VALUES
-    (4, 4, 10, 5, 'Excellent implementation of user profile functionality'),
-    (5, 5, 17, 4, 'Good design work, some minor improvements in responsiveness needed'),
-    (6, 6, 13, 5, 'Great setup of monitoring system with detailed documentation'),
-    (7, 7, 20, 4, 'Thorough testing performed, good bug reports'),
-    (8, 8, 11, 5, 'Comprehensive test coverage of API endpoints'),
-    (9, 9, 16, 4, 'Search feature works well, could use some optimization'),
-    (10, 10, 12, 5, 'Significant improvement in query performance'),
-    (11, 11, 14, 4, 'Detailed security report with actionable recommendations'),
-    (12, 12, 18, 5, 'Push notification system works flawlessly'),
-    (13, 13, 21, 4, 'Good performance test results with detailed analysis');
+    (4, 4, 1, 5, 'Excellent implementation of user profile functionality'),
+    (5, 5, 2, 4, 'Good work on password reset feature'),
+    (6, 6, 3, 5, 'Great optimization of database queries'),
+    (7, 11, 4, 4, 'Well-designed dashboard interface'),
+    (8, 12, 5, 5, 'Perfect implementation of dark theme'),
+    (9, 13, 6, 4, 'Good mobile responsiveness implementation'),
+    (10, 18, 7, 5, 'Excellent setup of monitoring system'),
+    (11, 19, 8, 4, 'Good work on Kubernetes setup'),
+    (12, 20, 9, 5, 'Great improvements to CI/CD pipeline');
 
 SELECT setval('evaluations_seq', (SELECT MAX(id) FROM evaluations)); 
