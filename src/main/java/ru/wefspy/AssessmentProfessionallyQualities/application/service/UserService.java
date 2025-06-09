@@ -107,7 +107,8 @@ public class UserService {
                 bestSkill = new SkillDto(
                         skill.getId(),
                         skill.getName(),
-                        bestUserSkill.getRating()
+                        bestUserSkill.getRating(),
+                        skill.getIsNecessary()
                 );
 
                 Set<Long> processedCategoryIds = new HashSet<>();
@@ -191,7 +192,8 @@ public class UserService {
                                 new SkillDto(
                                         skill.getId(),
                                         skill.getName(),
-                                        userSkill.getRating()
+                                        userSkill.getRating(),
+                                        skill.getIsNecessary()
                                 )));
             }
 
@@ -290,7 +292,8 @@ public class UserService {
                                     .map(skill -> new SkillDto(
                                             skill.getId(), 
                                             skill.getName(),
-                                            userSkill.getRating()
+                                            userSkill.getRating(),
+                                            skill.getIsNecessary()
                                     )))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
@@ -374,7 +377,8 @@ public class UserService {
                                     .map(skill -> new SkillDto(
                                             skill.getId(), 
                                             skill.getName(),
-                                            userSkill.getRating()
+                                            userSkill.getRating(),
+                                            skill.getIsNecessary()
                                     )))
                             .filter(Optional::isPresent)
                             .map(Optional::get)

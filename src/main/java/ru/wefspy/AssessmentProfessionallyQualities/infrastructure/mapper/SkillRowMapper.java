@@ -14,7 +14,8 @@ public class SkillRowMapper implements RowMapper<Skill> {
         return new Skill(
                 rs.getLong("id"),
                 rs.getLong("skill_category_id"),
-                rs.getString("name")
+                rs.getString("name"),
+                rs.getBoolean("is_necessary")
         );
     }
 }

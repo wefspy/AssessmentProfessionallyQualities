@@ -116,7 +116,8 @@ public class EvaluationService {
                         return new SkillDto(
                             skill.getId(),
                             skill.getName(),
-                            userSkill.getRating()
+                            userSkill.getRating(),
+                            skill.getIsNecessary()
                         );
                     }
                     return null;
@@ -147,7 +148,8 @@ public class EvaluationService {
                 skillDtos.add(new SkillDto(
                         skill.getId(),
                         skill.getName(),
-                        userSkill.getRating()
+                        userSkill.getRating(),
+                        skill.getIsNecessary()
                 ));
             }
         }

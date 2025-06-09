@@ -6,6 +6,7 @@ public class Skill {
     private Long id;
     private Long skillCategoryId;
     private String name;
+    private Boolean isNecessary;
 
     public Skill() {}
 
@@ -13,6 +14,7 @@ public class Skill {
                  String name) {
         setSkillCategoryId(skillCategoryId);
         setName(name);
+        setIsNecessary(false);
     }
 
     public Skill(Long id,
@@ -20,6 +22,14 @@ public class Skill {
                  String name) {
         this(skillCategoryId, name);
         setId(id);
+    }
+
+    public Skill(Long id,
+                 Long skillCategoryId,
+                 String name,
+                 Boolean isNecessary) {
+        this(id, skillCategoryId, name);
+        setIsNecessary(isNecessary);
     }
 
     public Long getId() {
@@ -46,6 +56,14 @@ public class Skill {
         this.name = name;
     }
 
+    public Boolean getIsNecessary() {
+        return isNecessary;
+    }
+
+    public void setIsNecessary(Boolean isNecessary) {
+        this.isNecessary = isNecessary;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
@@ -67,6 +85,7 @@ public class Skill {
                 "id=" + id +
                 ", skillCategoryId=" + skillCategoryId +
                 ", name='" + name + '\'' +
+                ", isNecessary=" + isNecessary +
                 '}';
     }
 }

@@ -114,7 +114,8 @@ public class SkillService {
                 skillDtos.add(new SkillDto(
                         skill.getId(),
                         skill.getName(),
-                        userSkill.getRating()
+                        userSkill.getRating(),
+                        skill.getIsNecessary()
                 ));
             }
         }
