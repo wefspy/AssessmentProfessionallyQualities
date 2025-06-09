@@ -180,9 +180,9 @@ public class JdbcTaskRepository {
 
     public void updateStatus(Long taskId, TaskStatus status) {
         jdbcTemplate.update(
-                "UPDATE tasks SET status = ?::task_status WHERE id = ?",
-                status.name(),
-                taskId
+            "UPDATE tasks SET status = ?::task_status WHERE id = ?",
+            status.name(),
+            taskId
         );
     }
 }

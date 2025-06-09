@@ -74,6 +74,20 @@ public class EvaluationService {
                 skillEval.feedback()
             );
             evaluations.add(evaluation);
+
+            // Recalculate and update user skill rating
+            List<Evaluation> allSkillEvaluations = evaluationRepository.findAllByUserSkillId(userSkill.getId());
+            allSkillEvaluations.add(evaluation); // Add current evaluation
+            
+            // Calculate average rating
+            double totalRating = allSkillEvaluations.stream()
+                    .mapToInt(e -> e.getEvaluation())
+                    .sum();
+            short newRating = (short) Math.round(totalRating / allSkillEvaluations.size());
+            
+            // Update user skill rating
+            userSkill.setRating(newRating);
+            userSkillRepository.update(userSkill);
         }
 
         // Save all evaluations
