@@ -296,10 +296,23 @@ public class UserService {
                             .map(Optional::get)
                             .toList();
 
-                    double averageRating = userSkills.stream()
-                            .mapToDouble(UserSkill::getRating)
-                            .average()
-                            .orElse(0.0);
+                    // Calculate average rating only for skills in main category
+                    double averageRating = 0.0;
+                    if (userInfo.getMainSkillCategoryId() != null) {
+                        List<UserSkill> mainCategorySkills = userSkills.stream()
+                                .filter(userSkill -> {
+                                    Skill skill = skillRepository.findById(userSkill.getSkillId()).orElse(null);
+                                    return skill != null && skill.getSkillCategoryId().equals(userInfo.getMainSkillCategoryId());
+                                })
+                                .toList();
+                        
+                        if (!mainCategorySkills.isEmpty()) {
+                            averageRating = mainCategorySkills.stream()
+                                    .mapToDouble(UserSkill::getRating)
+                                    .average()
+                                    .orElse(0.0);
+                        }
+                    }
 
                     return new PageableUserDto(
                             user.getId(),
@@ -367,10 +380,23 @@ public class UserService {
                             .map(Optional::get)
                             .toList();
 
-                    double averageRating = userSkills.stream()
-                            .mapToDouble(UserSkill::getRating)
-                            .average()
-                            .orElse(0.0);
+                    // Calculate average rating only for skills in main category
+                    double averageRating = 0.0;
+                    if (userInfo.getMainSkillCategoryId() != null) {
+                        List<UserSkill> mainCategorySkills = userSkills.stream()
+                                .filter(userSkill -> {
+                                    Skill skill = skillRepository.findById(userSkill.getSkillId()).orElse(null);
+                                    return skill != null && skill.getSkillCategoryId().equals(userInfo.getMainSkillCategoryId());
+                                })
+                                .toList();
+                        
+                        if (!mainCategorySkills.isEmpty()) {
+                            averageRating = mainCategorySkills.stream()
+                                    .mapToDouble(UserSkill::getRating)
+                                    .average()
+                                    .orElse(0.0);
+                        }
+                    }
 
                     return new PageableUserDto(
                             user.getId(),
