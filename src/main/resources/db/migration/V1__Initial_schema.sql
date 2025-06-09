@@ -143,12 +143,12 @@ SELECT setval('users_seq', (SELECT MAX(id) FROM users));
 
 INSERT INTO skill_categories (id, name, color)
 VALUES
-    (1, 'Backend', '#59AF79'),
-    (2, 'Frontend', '#719CFF'),
-    (3, 'DevOps', '#F4C2C2'),
-    (4, 'Design', '#FF78D7'),
-    (5, 'Analysis', '#FFFD7'),
-    (6, 'Teamlead', '#A76DFF');
+    (1, 'Backend', '#059669'),
+    (2, 'Frontend', '#2563EB'),
+    (3, 'DevOps', '#6366F1'),
+    (4, 'Design', '#D946EF'),
+    (5, 'Analysis', '#EAB308'),
+    (6, 'Teamlead', '#A855F7');
 
 SELECT setval('skill_categories_seq', (SELECT MAX(id) FROM skill_categories));
 
