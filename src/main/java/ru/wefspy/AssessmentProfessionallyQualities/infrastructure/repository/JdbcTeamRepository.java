@@ -10,6 +10,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.TeamRow
 
 import java.sql.PreparedStatement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +67,19 @@ public class JdbcTeamRepository {
         );
 
         return teams.stream().findFirst();
+    }
+
+    public List<Team> findAllByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        return jdbcTemplate.query(
+                String.format("SELECT * FROM teams WHERE id IN (%s)", placeholders),
+                teamRowMapper,
+                ids.toArray()
+        );
     }
 
     public Team update(Team team) {

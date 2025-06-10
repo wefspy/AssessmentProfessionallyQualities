@@ -7,17 +7,20 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.SkillCategory;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.SkillCategoryRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public class JdbcSkillCategoryRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final SkillCategoryRowMapper skillCategoryRowMapper;
 
     private final RowMapper<SkillCategory> rowMapper = (ResultSet rs, int rowNum) -> {
         SkillCategory category = new SkillCategory();
@@ -27,8 +30,10 @@ public class JdbcSkillCategoryRepository {
         return category;
     };
 
-    public JdbcSkillCategoryRepository(JdbcTemplate jdbcTemplate) {
+    public JdbcSkillCategoryRepository(JdbcTemplate jdbcTemplate,
+                                      SkillCategoryRowMapper skillCategoryRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
+        this.skillCategoryRowMapper = skillCategoryRowMapper;
     }
 
     public List<SkillCategory> findAll() {
@@ -48,19 +53,16 @@ public class JdbcSkillCategoryRepository {
     }
 
     public Long count() {
-        return jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM skill_categories WHERE name != 'Soft Skills'",
-                Long.class
-        );
+        return jdbcTemplate.queryForObject("SELECT count(*) FROM skill_categories", Long.class);
     }
 
     public SkillCategory save(SkillCategory skillCategory) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO skill_categories (name, color) " +
-                        "VALUES (?, ?)",
-                new String[]{"id"}
+                    "INSERT INTO skill_categories (name, color) " +
+                            "VALUES (?, ?) ",
+                    new String[]{"id"}
             );
             ps.setString(1, skillCategory.getName());
             ps.setString(2, skillCategory.getColor());
@@ -74,7 +76,7 @@ public class JdbcSkillCategoryRepository {
     public void saveAll(Collection<SkillCategory> skillCategories) {
         jdbcTemplate.batchUpdate(
                 "INSERT INTO skill_categories (name, color) " +
-                        "VALUES (?, ?)",
+                        "VALUES (?, ?) ",
                 skillCategories,
                 skillCategories.size(),
                 (ps, skillCategory) -> {
@@ -85,12 +87,28 @@ public class JdbcSkillCategoryRepository {
     }
 
     public Optional<SkillCategory> findById(Long id) {
-        List<SkillCategory> result = jdbcTemplate.query(
-                "SELECT * FROM skill_categories WHERE id = ?",
-                rowMapper,
+        List<SkillCategory> skillCategories = jdbcTemplate.query(
+                "SELECT * " +
+                        "FROM skill_categories " +
+                        "WHERE id = ? ",
+                skillCategoryRowMapper,
                 id
         );
-        return result.stream().findFirst();
+
+        return skillCategories.stream().findFirst();
+    }
+
+    public List<SkillCategory> findAllByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        return jdbcTemplate.query(
+                String.format("SELECT * FROM skill_categories WHERE id IN (%s)", placeholders),
+                skillCategoryRowMapper,
+                ids.toArray()
+        );
     }
 
     public SkillCategory update(SkillCategory skillCategory) {
@@ -109,7 +127,7 @@ public class JdbcSkillCategoryRepository {
     }
 
     public void delete(Long id) {
-        jdbcTemplate.update("DELETE FROM skill_categories WHERE id = ? ", id);
+        jdbcTemplate.update("DELETE FROM skill_categories WHERE id = ?", id);
     }
 
     public Optional<SkillCategory> findByName(String name) {
