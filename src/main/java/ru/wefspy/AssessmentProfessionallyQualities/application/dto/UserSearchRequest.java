@@ -9,4 +9,7 @@ public record UserSearchRequest(
         Long mainSkillCategoryId,
         Double minAverageRating
 ) {
+    public Double minAverageRating() {
+        return minAverageRating != null ? minAverageRating : 0.0;
+    }
 } 
