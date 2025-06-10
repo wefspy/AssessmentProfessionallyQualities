@@ -124,7 +124,7 @@ public class SkillService {
         double totalRating = softSkills.stream()
                 .mapToDouble(UserSkill::getRating)
                 .sum();
-        double averageRating = softSkills.isEmpty() ? 0.0 : totalRating / softSkills.size();
+        double averageRating = softSkills.isEmpty() ? 0.0 : (totalRating / softSkills.size()) / 2;
 
         return new UserSkillCategoryDto(
                 new SkillCategoryDto(softSkillsCategory.getId(), softSkillsCategory.getName(), softSkillsCategory.getColor()),

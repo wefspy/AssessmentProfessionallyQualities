@@ -39,7 +39,7 @@ public class JdbcTeamMemberStatsRepository {
                     ui.last_name,
                     tm.skill_category_id,
                     sc.name as skill_category_name,
-                    COALESCE(AVG(us.rating), 0) as average_rating
+                    COALESCE(AVG(us.rating) / 2, 0) as average_rating
                 FROM team_members tm
                 JOIN users_info ui ON tm.user_id = ui.id
                 JOIN skill_categories sc ON tm.skill_category_id = sc.id

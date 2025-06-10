@@ -119,14 +119,14 @@ public class JdbcUserInfoRepository {
                 "        AVG(CASE WHEN EXISTS (" +
                 "            SELECT 1 FROM skill_requirements sr " +
                 "            WHERE sr.skill_id = us.skill_id" +
-                "        ) THEN us.rating ELSE NULL END) as avg_rating " +
+                "        ) THEN us.rating ELSE NULL END) / 2 as avg_rating " +
                 "    FROM users_skills us " +
                 "    GROUP BY us.user_id " +
                 "), category_skills_avg AS (" +
                 "    SELECT " +
                 "        us.user_id, " +
                 "        s.skill_category_id, " +
-                "        AVG(us.rating) as category_avg_rating " +
+                "        AVG(us.rating) / 2 as category_avg_rating " +
                 "    FROM users_skills us " +
                 "    JOIN skills s ON us.skill_id = s.id " +
                 "    GROUP BY us.user_id, s.skill_category_id" +
@@ -214,14 +214,14 @@ public class JdbcUserInfoRepository {
                 "        AVG(CASE WHEN EXISTS (" +
                 "            SELECT 1 FROM skill_requirements sr " +
                 "            WHERE sr.skill_id = us.skill_id" +
-                "        ) THEN us.rating ELSE NULL END) as avg_rating " +
+                "        ) THEN us.rating ELSE NULL END) / 2 as avg_rating " +
                 "    FROM users_skills us " +
                 "    GROUP BY us.user_id " +
                 "), category_skills_avg AS (" +
                 "    SELECT " +
                 "        us.user_id, " +
                 "        s.skill_category_id, " +
-                "        AVG(us.rating) as category_avg_rating " +
+                "        AVG(us.rating) / 2 as category_avg_rating " +
                 "    FROM users_skills us " +
                 "    JOIN skills s ON us.skill_id = s.id " +
                 "    GROUP BY us.user_id, s.skill_category_id" +
@@ -342,7 +342,7 @@ public class JdbcUserInfoRepository {
                 "    SELECT " +
                 "        us.user_id, " +
                 "        s.skill_category_id, " +
-                "        AVG(us.rating) as category_avg_rating " +
+                "        AVG(us.rating) / 2 as category_avg_rating " +
                 "    FROM users_skills us " +
                 "    JOIN skills s ON us.skill_id = s.id " +
                 "    GROUP BY us.user_id, s.skill_category_id" +

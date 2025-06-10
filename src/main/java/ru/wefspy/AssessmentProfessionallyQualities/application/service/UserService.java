@@ -183,7 +183,7 @@ public class UserService {
             double totalRating = categoryUserSkills.stream()
                     .mapToDouble(UserSkill::getRating)
                     .sum();
-            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : totalRating / categoryUserSkills.size();
+            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : (totalRating / categoryUserSkills.size()) / 2;
 
             Collection<SkillDto> skillDtos = new ArrayList<>();
             for (UserSkill userSkill : categoryUserSkills) {
@@ -239,7 +239,7 @@ public class UserService {
             double totalRating = categoryUserSkills.stream()
                     .mapToDouble(UserSkill::getRating)
                     .sum();
-            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : totalRating / categoryUserSkills.size();
+            double averageRating = categoryUserSkills.isEmpty() ? 0.0 : (totalRating / categoryUserSkills.size()) / 2;
 
             categories.add(new ReviewSkillCategoryDto(
                     category.getId(),
@@ -313,7 +313,7 @@ public class UserService {
                             averageRating = mainCategorySkills.stream()
                                     .mapToDouble(UserSkill::getRating)
                                     .average()
-                                    .orElse(0.0);
+                                    .orElse(0.0) / 2;
                         }
                     }
 
@@ -398,7 +398,7 @@ public class UserService {
                             averageRating = mainCategorySkills.stream()
                                     .mapToDouble(UserSkill::getRating)
                                     .average()
-                                    .orElse(0.0);
+                                    .orElse(0.0) / 2;
                         }
                     }
 
@@ -497,7 +497,7 @@ public class UserService {
                             averageRating = mainCategorySkills.stream()
                                     .mapToDouble(UserSkill::getRating)
                                     .average()
-                                    .orElse(0.0);
+                                    .orElse(0.0) / 2;
                         }
                     }
 
