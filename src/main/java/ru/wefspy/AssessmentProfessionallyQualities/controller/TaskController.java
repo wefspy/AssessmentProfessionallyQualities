@@ -15,10 +15,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTaskRequest;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTasksRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TaskWithMembersDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UpdateTaskRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.TaskService;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.UserDetailsImpl;
+
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/evaluations/tasks")
@@ -36,6 +39,15 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<TaskWithMembersDto> createTask(@Valid @RequestBody CreateTaskRequest request) {
         return ResponseEntity.ok(taskService.createTask(request));
+    }
+
+    @Operation(summary = "Создание нескольких задач")
+    @ApiResponse(responseCode = "200", description = "Задачи успешно созданы", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Collection.class))
+    })
+    @PostMapping("/batch")
+    public ResponseEntity<Collection<TaskWithMembersDto>> createTasks(@Valid @RequestBody CreateTasksRequest request) {
+        return ResponseEntity.ok(taskService.createTasks(request.tasks()));
     }
 
     @Operation(summary = "Удаление задачи")

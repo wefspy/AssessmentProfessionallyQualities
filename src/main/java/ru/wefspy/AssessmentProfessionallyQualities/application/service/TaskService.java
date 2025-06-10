@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTaskRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TaskWithMembersDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TeamMemberInfoDto;
@@ -20,6 +21,8 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.Jdb
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
@@ -253,5 +256,76 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
         return getTaskWithMembers(task);
+    }
+
+    @Transactional
+    public Collection<TaskWithMembersDto> createTasks(Collection<CreateTaskRequest> requests) {
+        // Convert requests to Task entities
+        List<Task> tasks = requests.stream()
+                .map(request -> new Task(
+                        request.evaluatorMemberId(),
+                        request.assigneeMemberId(),
+                        request.leadMemberId(),
+                        request.title(),
+                        request.description(),
+                        request.deadlineCompletion(),
+                        request.status()
+                ))
+                .collect(Collectors.toList());
+
+        // Save all tasks
+        taskRepository.saveAll(tasks);
+
+        // Collect all member IDs from tasks
+        List<Long> allMemberIds = tasks.stream()
+                .flatMap(task -> List.of(
+                        task.getEvaluatorMemberId(),
+                        task.getAssigneeMemberId(),
+                        task.getLeadMemberId()
+                ).stream())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Get team members info
+        Map<Long, TeamMember> teamMembersMap = teamMemberRepository.findAllByIds(allMemberIds)
+                .stream()
+                .collect(Collectors.toMap(TeamMember::getId, member -> member));
+
+        // Get user info
+        Map<Long, UserInfo> userInfoMap = userInfoRepository.findAllByUserIds(
+                teamMembersMap.values().stream()
+                        .map(TeamMember::getUserId)
+                        .collect(Collectors.toList())
+        ).stream()
+                .collect(Collectors.toMap(UserInfo::getId, info -> info));
+
+        // Convert tasks to DTOs
+        return tasks.stream()
+                .map(task -> {
+                    TeamMemberInfoDto evaluator = createTeamMemberInfo(
+                            teamMembersMap.get(task.getEvaluatorMemberId()),
+                            userInfoMap.get(teamMembersMap.get(task.getEvaluatorMemberId()).getUserId())
+                    );
+                    TeamMemberInfoDto assignee = createTeamMemberInfo(
+                            teamMembersMap.get(task.getAssigneeMemberId()),
+                            userInfoMap.get(teamMembersMap.get(task.getAssigneeMemberId()).getUserId())
+                    );
+                    TeamMemberInfoDto lead = createTeamMemberInfo(
+                            teamMembersMap.get(task.getLeadMemberId()),
+                            userInfoMap.get(teamMembersMap.get(task.getLeadMemberId()).getUserId())
+                    );
+
+                    return new TaskWithMembersDto(
+                            task.getId(),
+                            evaluator,
+                            assignee,
+                            lead,
+                            task.getTitle(),
+                            task.getDescription(),
+                            task.getDeadlineCompletion(),
+                            task.getStatus()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 } 

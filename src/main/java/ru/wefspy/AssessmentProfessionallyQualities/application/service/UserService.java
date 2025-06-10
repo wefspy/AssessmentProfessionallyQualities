@@ -514,6 +514,7 @@ public class UserService {
                             averageRating
                     );
                 })
+                .filter(x -> x.averageSkillRating() >= request.minAverageRating())
                 .toList();
 
         return new PageImpl<>(userDtos, pageable, total);
