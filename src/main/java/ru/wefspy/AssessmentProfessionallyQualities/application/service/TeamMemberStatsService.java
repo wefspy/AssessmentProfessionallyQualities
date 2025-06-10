@@ -14,7 +14,12 @@ public class TeamMemberStatsService {
         this.teamMemberStatsRepository = teamMemberStatsRepository;
     }
 
-    public List<TeamMemberStatsDTO> getTeamMemberStats(Long teamId) {
-        return teamMemberStatsRepository.findTeamMemberStatsByTeamId(teamId);
+    public List<TeamMemberStatsDTO> getTeamMemberStats(Long teamId, Long currentUserId) {
+        List<TeamMemberStatsDTO> stats = teamMemberStatsRepository.findTeamMemberStatsByTeamId(teamId);
+        
+        // Set isCurrentUser flag for each member
+        stats.forEach(stat -> stat.setCurrentUser(stat.getUserId().equals(currentUserId)));
+        
+        return stats;
     }
 } 

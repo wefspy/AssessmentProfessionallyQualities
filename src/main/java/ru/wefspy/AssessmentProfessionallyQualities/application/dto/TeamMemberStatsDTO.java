@@ -9,6 +9,7 @@ public class TeamMemberStatsDTO {
     private Long skillCategoryId;
     private String skillCategoryName;
     private Double averageRating;
+    private boolean isCurrentUser;
 
     public Long getTeamId() {
         return teamId;
@@ -72,5 +73,13 @@ public class TeamMemberStatsDTO {
 
     public void setAverageRating(Double averageRating) {
         this.averageRating = averageRating;
+    }
+
+    public boolean isCurrentUser() {
+        return isCurrentUser;
+    }
+
+    public void setCurrentUser(boolean currentUser) {
+        isCurrentUser = currentUser;
     }
 }
