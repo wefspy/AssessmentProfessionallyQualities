@@ -4,6 +4,9 @@ import java.util.List;
 
 public record UserSearchRequest(
         String query,
-        List<SkillSearchCriteria> skillCriteria
+        List<SkillSearchCriteria> skillCriteria,
+        Short courseNumber,
+        Long mainSkillCategoryId,
+        Double minAverageRating
 ) {
 } 

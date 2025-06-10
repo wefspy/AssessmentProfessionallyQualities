@@ -42,7 +42,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getPageableUsers(pageable));
     }
 
-    @Operation(summary = "Поиск пользователей по имени и навыкам")
+    @Operation(summary = "Поиск пользователей по имени, навыкам, курсу и среднему рейтингу")
     @ApiResponse(responseCode = "200", description = "Поиск пользователей успешно выполнен", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = PageableUserDto.class))
     })
@@ -57,6 +57,6 @@ public class UserController {
             @RequestBody UserSearchRequest request,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(userService.searchUsers(request.query(), request.skillCriteria(), pageable));
+        return ResponseEntity.ok(userService.searchUsers(request, pageable));
     }
 }
