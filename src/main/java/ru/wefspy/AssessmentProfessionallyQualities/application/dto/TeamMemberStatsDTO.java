@@ -8,6 +8,7 @@ public class TeamMemberStatsDTO {
     private String lastName;
     private Long skillCategoryId;
     private String skillCategoryName;
+    private String skillCategoryColor;
     private Double averageRating;
     private boolean isCurrentUser;
 
@@ -65,6 +66,14 @@ public class TeamMemberStatsDTO {
 
     public void setSkillCategoryName(String skillCategoryName) {
         this.skillCategoryName = skillCategoryName;
+    }
+
+    public String getSkillCategoryColor() {
+        return skillCategoryColor;
+    }
+
+    public void setSkillCategoryColor(String skillCategoryColor) {
+        this.skillCategoryColor = skillCategoryColor;
     }
 
     public Double getAverageRating() {
