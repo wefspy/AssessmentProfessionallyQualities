@@ -9,11 +9,14 @@ import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTaskReq
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TaskWithMembersDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TeamMemberInfoDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UpdateTaskRequest;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.exception.TaskNotFoundException;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Task;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.TeamMember;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.SkillCategory;
+import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Skill;
+import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserSkill;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 
 import java.util.List;
@@ -31,19 +34,25 @@ public class TaskService {
     private final JdbcSkillCategoryRepository skillCategoryRepository;
     private final JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository;
     private final JdbcUserRepository userRepository;
+    private final JdbcUserSkillRepository userSkillRepository;
+    private final JdbcSkillRepository skillRepository;
 
     public TaskService(JdbcTaskRepository taskRepository,
                       JdbcTeamMemberRepository teamMemberRepository,
                       JdbcUserInfoRepository userInfoRepository,
                       JdbcSkillCategoryRepository skillCategoryRepository,
                       JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository,
-                      JdbcUserRepository userRepository) {
+                      JdbcUserRepository userRepository,
+                      JdbcUserSkillRepository userSkillRepository,
+                      JdbcSkillRepository skillRepository) {
         this.taskRepository = taskRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userInfoRepository = userInfoRepository;
         this.skillCategoryRepository = skillCategoryRepository;
         this.taskEvaluatedSkillsRepository = taskEvaluatedSkillsRepository;
         this.userRepository = userRepository;
+        this.userSkillRepository = userSkillRepository;
+        this.skillRepository = skillRepository;
     }
 
     @Transactional
@@ -108,13 +117,6 @@ public class TaskService {
         ).stream()
                 .collect(Collectors.toMap(UserInfo::getId, info -> info));
 
-        // Get user skill IDs for all tasks
-        Map<Long, List<Long>> taskUserSkillsMap = tasks.stream()
-                .collect(Collectors.toMap(
-                    Task::getId,
-                    task -> taskEvaluatedSkillsRepository.findAllByTaskId(task.getId())
-                ));
-
         // Преобразуем задачи в DTO с информацией о пользователях
         List<TaskWithMembersDto> taskDtos = tasks.stream()
                 .map(task -> {
@@ -139,8 +141,7 @@ public class TaskService {
                             task.getTitle(),
                             task.getDescription(),
                             task.getDeadlineCompletion(),
-                            task.getStatus(),
-                            taskUserSkillsMap.get(task.getId())
+                            task.getStatus()
                     );
                 })
                 .collect(Collectors.toList());
@@ -367,6 +368,45 @@ public class TaskService {
                             task.getDeadlineCompletion(),
                             task.getStatus(),
                             taskUserSkillsMap.get(task.getId())
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    public Collection<SkillDto> getTaskEvaluatedSkills(Long taskId) {
+        // Check if task exists
+        if (!taskRepository.existsById(taskId)) {
+            throw new TaskNotFoundException("Task not found with id: " + taskId);
+        }
+        
+        // Get user skill IDs for this task
+        List<Long> userSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
+        
+        // Get user skills
+        List<UserSkill> userSkills = userSkillRepository.findAllByIds(userSkillIds);
+        
+        // Get skill IDs
+        List<Long> skillIds = userSkills.stream()
+                .map(UserSkill::getSkillId)
+                .collect(Collectors.toList());
+        
+        // Get skills
+        Map<Long, Skill> skillsMap = skillRepository.findAllByIds(skillIds)
+                .stream()
+                .collect(Collectors.toMap(
+                    Skill::getId,
+                    skill -> skill
+                ));
+        
+        // Convert to DTOs
+        return userSkills.stream()
+                .map(userSkill -> {
+                    Skill skill = skillsMap.get(userSkill.getSkillId());
+                    return new SkillDto(
+                            skill.getId(),
+                            skill.getName(),
+                            userSkill.getRating(),
+                            skill.getIsNecessary()
                     );
                 })
                 .collect(Collectors.toList());

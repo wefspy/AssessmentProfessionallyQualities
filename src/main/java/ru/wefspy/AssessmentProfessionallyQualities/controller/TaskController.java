@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTaskRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.CreateTasksRequest;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.TaskWithMembersDto;
 import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UpdateTaskRequest;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.TaskService;
@@ -111,5 +112,18 @@ public class TaskController {
     public ResponseEntity<TaskWithMembersDto> getTaskById(
             @Parameter(description = "ID задачи") @PathVariable Long taskId) {
         return ResponseEntity.ok(taskService.getTaskById(taskId));
+    }
+
+    @Operation(summary = "Получение списка оцениваемых навыков для задачи")
+    @ApiResponse(responseCode = "200", description = "Список навыков успешно получен", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Collection.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Задача не найдена", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/{taskId}/evaluated-skills")
+    public ResponseEntity<Collection<SkillDto>> getTaskEvaluatedSkills(
+            @Parameter(description = "ID задачи") @PathVariable Long taskId) {
+        return ResponseEntity.ok(taskService.getTaskEvaluatedSkills(taskId));
     }
 } 
