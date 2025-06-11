@@ -9,8 +9,10 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserSki
 
 import java.sql.PreparedStatement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class JdbcUserSkillRepository {
@@ -91,6 +93,21 @@ public class JdbcUserSkillRepository {
         );
     }
 
+    public List<UserSkill> findAllByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = String.format("SELECT * FROM users_skills WHERE id IN (%s)", placeholders);
+
+        return jdbcTemplate.query(
+                sql,
+                userSkillRowMapper,
+                ids.toArray()
+        );
+    }
+
     public UserSkill update(UserSkill userSkill) {
         jdbcTemplate.update(
                 "UPDATE users_skills " +
@@ -110,5 +127,25 @@ public class JdbcUserSkillRepository {
 
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM users_skills WHERE id = ?", id);
+    }
+
+    public boolean existsById(Long id) {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users_skills WHERE id = ?",
+                Long.class,
+                id
+        );
+        return count != null && count > 0;
+    }
+
+    public List<UserSkill> findAllByUserIdAndSkillCategoryId(Long userId, Long skillCategoryId) {
+        return jdbcTemplate.query(
+                "SELECT us.* FROM users_skills us " +
+                "JOIN skills s ON us.skill_id = s.id " +
+                "WHERE us.user_id = ? AND s.skill_category_id = ?",
+                userSkillRowMapper,
+                userId,
+                skillCategoryId
+        );
     }
 }

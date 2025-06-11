@@ -14,16 +14,14 @@ import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Task;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.TeamMember;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserInfo;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.SkillCategory;
-import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcTaskRepository;
-import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcTeamMemberRepository;
-import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcUserInfoRepository;
-import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.JdbcSkillCategoryRepository;
+import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Service
 public class TaskService {
@@ -31,17 +29,24 @@ public class TaskService {
     private final JdbcTeamMemberRepository teamMemberRepository;
     private final JdbcUserInfoRepository userInfoRepository;
     private final JdbcSkillCategoryRepository skillCategoryRepository;
+    private final JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository;
+    private final JdbcUserRepository userRepository;
 
     public TaskService(JdbcTaskRepository taskRepository,
                       JdbcTeamMemberRepository teamMemberRepository,
                       JdbcUserInfoRepository userInfoRepository,
-                      JdbcSkillCategoryRepository skillCategoryRepository) {
+                      JdbcSkillCategoryRepository skillCategoryRepository,
+                      JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository,
+                      JdbcUserRepository userRepository) {
         this.taskRepository = taskRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userInfoRepository = userInfoRepository;
         this.skillCategoryRepository = skillCategoryRepository;
+        this.taskEvaluatedSkillsRepository = taskEvaluatedSkillsRepository;
+        this.userRepository = userRepository;
     }
 
+    @Transactional
     public TaskWithMembersDto createTask(CreateTaskRequest request) {
         Task task = new Task(
                 request.evaluatorMemberId(),
@@ -54,6 +59,10 @@ public class TaskService {
         );
 
         task = taskRepository.save(task);
+        
+        // Save task evaluated skills
+        taskEvaluatedSkillsRepository.saveAll(task.getId(), request.userSkillIds());
+        
         return getTaskWithMembers(task);
     }
 
@@ -61,6 +70,9 @@ public class TaskService {
         if (!taskRepository.existsById(taskId)) {
             throw new TaskNotFoundException("Task not found with id: " + taskId);
         }
+        // Delete task evaluated skills first
+        taskEvaluatedSkillsRepository.deleteByTaskId(taskId);
+        // Then delete the task
         taskRepository.delete(taskId);
     }
 
@@ -96,6 +108,13 @@ public class TaskService {
         ).stream()
                 .collect(Collectors.toMap(UserInfo::getId, info -> info));
 
+        // Get user skill IDs for all tasks
+        Map<Long, List<Long>> taskUserSkillsMap = tasks.stream()
+                .collect(Collectors.toMap(
+                    Task::getId,
+                    task -> taskEvaluatedSkillsRepository.findAllByTaskId(task.getId())
+                ));
+
         // Преобразуем задачи в DTO с информацией о пользователях
         List<TaskWithMembersDto> taskDtos = tasks.stream()
                 .map(task -> {
@@ -120,7 +139,8 @@ public class TaskService {
                             task.getTitle(),
                             task.getDescription(),
                             task.getDeadlineCompletion(),
-                            task.getStatus()
+                            task.getStatus(),
+                            taskUserSkillsMap.get(task.getId())
                     );
                 })
                 .collect(Collectors.toList());
@@ -128,6 +148,7 @@ public class TaskService {
         return new PageImpl<>(taskDtos, pageable, total);
     }
 
+    @Transactional
     public TaskWithMembersDto updateTask(Long taskId, UpdateTaskRequest request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
@@ -141,6 +162,9 @@ public class TaskService {
         task.setStatus(request.status());
 
         task = taskRepository.update(task);
+
+        // Get user skill IDs for this task
+        List<Long> userSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
 
         // Получаем информацию о членах команды
         List<Long> memberIds = List.of(
@@ -183,7 +207,8 @@ public class TaskService {
                 task.getTitle(),
                 task.getDescription(),
                 task.getDeadlineCompletion(),
-                task.getStatus()
+                task.getStatus(),
+                userSkillIds
         );
     }
 
@@ -207,6 +232,9 @@ public class TaskService {
         ).stream()
                 .collect(Collectors.toMap(UserInfo::getId, info -> info));
 
+        // Get user skill IDs for this task
+        List<Long> userSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(task.getId());
+
         // Создаем DTO с полной информацией
         TeamMemberInfoDto evaluator = createTeamMemberInfo(
                 teamMembersMap.get(task.getEvaluatorMemberId()),
@@ -229,7 +257,8 @@ public class TaskService {
                 task.getTitle(),
                 task.getDescription(),
                 task.getDeadlineCompletion(),
-                task.getStatus()
+                task.getStatus(),
+                userSkillIds
         );
     }
 
@@ -260,21 +289,34 @@ public class TaskService {
 
     @Transactional
     public Collection<TaskWithMembersDto> createTasks(Collection<CreateTaskRequest> requests) {
-        // Convert requests to Task entities
-        List<Task> tasks = requests.stream()
-                .map(request -> new Task(
-                        request.evaluatorMemberId(),
-                        request.assigneeMemberId(),
-                        request.leadMemberId(),
-                        request.title(),
-                        request.description(),
-                        request.deadlineCompletion(),
-                        request.status()
-                ))
-                .collect(Collectors.toList());
+        // Convert requests to Task entities and save them
+        List<Task> tasks = new ArrayList<>();
+        Map<Long, Collection<Long>> taskUserSkillsMap = new HashMap<>();
 
-        // Save all tasks
+        // Create and save tasks one by one to get their IDs
+        for (CreateTaskRequest request : requests) {
+            Task task = new Task(
+                    request.evaluatorMemberId(),
+                    request.assigneeMemberId(),
+                    request.leadMemberId(),
+                    request.title(),
+                    request.description(),
+                    request.deadlineCompletion(),
+                    request.status()
+            );
+            tasks.add(task);
+        }
+
+        // Save all tasks (this will set their IDs)
         taskRepository.saveAll(tasks);
+
+        // Now save task evaluated skills for each task
+        for (int i = 0; i < tasks.size(); i++) {
+            Task task = tasks.get(i);
+            CreateTaskRequest request = new ArrayList<>(requests).get(i);
+            taskEvaluatedSkillsRepository.saveAll(task.getId(), request.userSkillIds());
+            taskUserSkillsMap.put(task.getId(), request.userSkillIds());
+        }
 
         // Collect all member IDs from tasks
         List<Long> allMemberIds = tasks.stream()
@@ -323,7 +365,8 @@ public class TaskService {
                             task.getTitle(),
                             task.getDescription(),
                             task.getDeadlineCompletion(),
-                            task.getStatus()
+                            task.getStatus(),
+                            taskUserSkillsMap.get(task.getId())
                     );
                 })
                 .collect(Collectors.toList());

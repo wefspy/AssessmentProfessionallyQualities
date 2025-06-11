@@ -3,6 +3,7 @@ package ru.wefspy.AssessmentProfessionallyQualities.application.dto;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.enums.TaskStatus;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 public record TaskWithMembersDto(
         Long id,
@@ -12,5 +13,6 @@ public record TaskWithMembersDto(
         String title,
         String description,
         LocalDate deadlineCompletion,
-        TaskStatus status
+        TaskStatus status,
+        Collection<Long> userSkillIds
 ) {} 

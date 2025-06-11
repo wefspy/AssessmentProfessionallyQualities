@@ -2,9 +2,11 @@ package ru.wefspy.AssessmentProfessionallyQualities.application.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.enums.TaskStatus;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 public record CreateTaskRequest(
         @NotNull(message = "Evaluator member ID is required")
@@ -26,5 +28,9 @@ public record CreateTaskRequest(
         LocalDate deadlineCompletion,
         
         @NotNull(message = "Status is required")
-        TaskStatus status
+        TaskStatus status,
+
+        @NotNull(message = "User skill IDs to evaluate are required")
+        @Size(min = 1, message = "At least one user skill ID must be specified")
+        Collection<Long> userSkillIds
 ) {} 

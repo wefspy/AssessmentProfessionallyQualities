@@ -138,4 +138,13 @@ public class JdbcSkillCategoryRepository {
         );
         return result.stream().findFirst();
     }
+
+    public boolean existsById(Long id) {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM skill_categories WHERE id = ?",
+                Long.class,
+                id
+        );
+        return count != null && count > 0;
+    }
 }

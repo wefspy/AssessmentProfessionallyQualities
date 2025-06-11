@@ -9,6 +9,7 @@ CREATE SEQUENCE IF NOT EXISTS teams_seq START WITH 1 INCREMENT BY 10;
 CREATE SEQUENCE IF NOT EXISTS team_members_seq START WITH 1 INCREMENT BY 10;
 CREATE SEQUENCE IF NOT EXISTS tasks_seq START WITH 1 INCREMENT BY 10;
 CREATE SEQUENCE IF NOT EXISTS evaluations_seq START WITH 1 INCREMENT BY 25;
+CREATE SEQUENCE IF NOT EXISTS task_evaluated_skills_seq START WITH 1 INCREMENT BY 1;
 
 -- Custom Types
 DO $$
@@ -115,6 +116,15 @@ CREATE TABLE IF NOT EXISTS evaluations (
     feedback TEXT,
     FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
     FOREIGN KEY (user_skill_id) REFERENCES users_skills (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS task_evaluated_skills (
+    id BIGINT PRIMARY KEY DEFAULT nextval('task_evaluated_skills_seq'),
+    task_id BIGINT NOT NULL,
+    user_skill_id BIGINT NOT NULL,
+    FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_skill_id) REFERENCES users_skills (id) ON DELETE CASCADE,
+    UNIQUE (task_id, user_skill_id)
 );
 
 

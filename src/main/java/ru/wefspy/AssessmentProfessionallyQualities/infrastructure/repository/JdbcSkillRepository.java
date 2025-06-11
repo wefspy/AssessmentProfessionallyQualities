@@ -10,6 +10,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.SkillRo
 
 import java.sql.PreparedStatement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -114,5 +115,20 @@ public class JdbcSkillRepository {
 
     public void delete(Long id) {
         jdbcTemplate.update("DELETE FROM skills WHERE id = ? ", id);
+    }
+
+    public List<Skill> findAllByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = String.format("SELECT * FROM skills WHERE id IN (%s)", placeholders);
+
+        return jdbcTemplate.query(
+                sql,
+                skillRowMapper,
+                ids.toArray()
+        );
     }
 }

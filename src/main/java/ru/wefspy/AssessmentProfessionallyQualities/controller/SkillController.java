@@ -13,14 +13,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.AddUserSkillRequest;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.ApiErrorDto;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.SkillSearchRequest;
-import ru.wefspy.AssessmentProfessionallyQualities.application.dto.UserSkillCategoryDto;
+import ru.wefspy.AssessmentProfessionallyQualities.application.dto.*;
 import ru.wefspy.AssessmentProfessionallyQualities.application.service.SkillService;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.Skill;
 import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserSkill;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.security.UserDetailsImpl;
+
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/skills")
@@ -95,5 +94,32 @@ public class SkillController {
             @PathVariable Long skillId) {
         skillService.deleteUserSkill(userDetails.getId(), skillId);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Получение навыков пользователя по категории")
+    @ApiResponse(responseCode = "200", description = "Список навыков успешно получен", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Collection.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Пользователь или категория не найдены", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/users/{userId}/categories/{categoryId}")
+    public ResponseEntity<Collection<SkillDto>> getUserSkillsByCategory(
+            @Parameter(description = "ID пользователя") @PathVariable Long userId,
+            @Parameter(description = "ID категории навыков") @PathVariable Long categoryId) {
+        return ResponseEntity.ok(skillService.getUserSkillsByCategory(userId, categoryId));
+    }
+
+    @Operation(summary = "Получение всех навыков пользователя по категориям")
+    @ApiResponse(responseCode = "200", description = "Список навыков успешно получен", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Collection.class))
+    })
+    @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorDto.class))
+    })
+    @GetMapping("/users/{userId}/categories")
+    public ResponseEntity<Collection<SkillDto>> getAllUserSkillsByCategories(
+            @Parameter(description = "ID пользователя") @PathVariable Long userId) {
+        return ResponseEntity.ok(skillService.getAllUserSkillsByCategories(userId));
     }
 } 

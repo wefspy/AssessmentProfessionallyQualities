@@ -19,7 +19,10 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class SkillService {
@@ -131,5 +134,76 @@ public class SkillService {
                 skillDtos,
                 averageRating
         );
+    }
+
+    public Collection<SkillDto> getUserSkillsByCategory(Long userId, Long skillCategoryId) {
+        // Check if user exists
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(String.format("User with id %d not found", userId));
+        }
+
+        // Check if skill category exists
+        if (!skillCategoryRepository.existsById(skillCategoryId)) {
+            throw new SkillCategoryNotFoundException(String.format("Skill category with id %d not found", skillCategoryId));
+        }
+
+        // Get user skills for the category
+        List<UserSkill> userSkills = userSkillRepository.findAllByUserIdAndSkillCategoryId(userId, skillCategoryId);
+
+        // Get all skill details
+        Map<Long, Skill> skillsMap = skillRepository.findAllByIds(
+                userSkills.stream()
+                        .map(UserSkill::getSkillId)
+                        .collect(Collectors.toList())
+        ).stream()
+                .collect(Collectors.toMap(Skill::getId, skill -> skill));
+
+        // Convert to DTOs
+        return userSkills.stream()
+                .map(userSkill -> {
+                    Skill skill = skillsMap.get(userSkill.getSkillId());
+                    return new SkillDto(
+                            skill.getId(),
+                            skill.getName(),
+                            userSkill.getRating(),
+                            skill.getIsNecessary()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    public Collection<SkillDto> getAllUserSkillsByCategories(Long userId) {
+        // Check if user exists
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(String.format("User with id %d not found", userId));
+        }
+
+        // Get all user skills
+        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(userId);
+        
+        // Get all skill details
+        Map<Long, Skill> skillsMap = skillRepository.findAllByIds(
+                userSkills.stream()
+                        .map(UserSkill::getSkillId)
+                        .collect(Collectors.toList())
+        ).stream()
+                .collect(Collectors.toMap(Skill::getId, skill -> skill));
+
+        // Convert to DTOs
+        return userSkills.stream()
+                .map(userSkill -> {
+                    Skill skill = skillsMap.get(userSkill.getSkillId());
+                    if (skill != null) {
+                        return new SkillDto(
+                                skill.getId(),
+                                skill.getName(),
+                                userSkill.getRating(),
+                                skill.getIsNecessary()
+                        );
+                    }
+                    return null;
+                })
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
     }
 } 

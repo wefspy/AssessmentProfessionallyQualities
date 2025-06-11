@@ -105,7 +105,16 @@ public class JdbcUserRepository {
     }
 
     public void delete(Long id) {
-        jdbcTemplate.update("DELETE FROM users WHERE id = ? ", id);
+        jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
+    }
+
+    public boolean existsById(Long id) {
+        Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE id = ?",
+                Long.class,
+                id
+        );
+        return count != null && count > 0;
     }
 
     public List<User> findAll(Pageable pageable) {

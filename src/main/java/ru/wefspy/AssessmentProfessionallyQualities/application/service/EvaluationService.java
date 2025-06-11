@@ -16,6 +16,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.repository.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +28,7 @@ public class EvaluationService {
     private final JdbcEvaluationRepository evaluationRepository;
     private final JdbcUserRepository userRepository;
     private final JdbcSkillCategoryRepository skillCategoryRepository;
+    private final JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository;
 
     public EvaluationService(
             JdbcTaskRepository taskRepository,
@@ -35,7 +37,8 @@ public class EvaluationService {
             JdbcSkillRepository skillRepository,
             JdbcEvaluationRepository evaluationRepository,
             JdbcUserRepository userRepository,
-            JdbcSkillCategoryRepository skillCategoryRepository) {
+            JdbcSkillCategoryRepository skillCategoryRepository,
+            JdbcTaskEvaluatedSkillsRepository taskEvaluatedSkillsRepository) {
         this.taskRepository = taskRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userSkillRepository = userSkillRepository;
@@ -43,6 +46,7 @@ public class EvaluationService {
         this.evaluationRepository = evaluationRepository;
         this.userRepository = userRepository;
         this.skillCategoryRepository = skillCategoryRepository;
+        this.taskEvaluatedSkillsRepository = taskEvaluatedSkillsRepository;
     }
 
     @Transactional
@@ -57,14 +61,23 @@ public class EvaluationService {
         TeamMember assignee = teamMemberRepository.findById(task.getAssigneeMemberId())
                 .orElseThrow(() -> new IllegalStateException("Assignee team member not found"));
 
-        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(assignee.getUserId());
+        // Get the list of user skills that should be evaluated for this task
+        List<Long> taskUserSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
+        
+        // Get all user skills that are to be evaluated
+        Map<Long, UserSkill> userSkillsMap = userSkillRepository.findAllByIds(taskUserSkillIds)
+                .stream()
+                .collect(Collectors.toMap(
+                    us -> us.getSkillId(),
+                    us -> us
+                ));
         
         Collection<Evaluation> evaluations = new ArrayList<>();
         for (EvaluationRequest.SkillEvaluation skillEval : request.skillEvaluations()) {
-            UserSkill userSkill = userSkills.stream()
-                    .filter(us -> us.getSkillId().equals(skillEval.skillId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("User does not have the skill being evaluated"));
+            UserSkill userSkill = userSkillsMap.get(skillEval.skillId());
+            if (userSkill == null) {
+                throw new IllegalStateException("Skill " + skillEval.skillId() + " is not in the list of skills to be evaluated for this task");
+            }
 
             // Create evaluation record
             Evaluation evaluation = new Evaluation(
@@ -101,28 +114,24 @@ public class EvaluationService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
 
-        TeamMember assignee = teamMemberRepository.findById(task.getAssigneeMemberId())
-                .orElseThrow(() -> new IllegalStateException("Assignee team member not found"));
-
-        List<UserSkill> userSkills = userSkillRepository.findAllByUserId(assignee.getUserId());
+        // Get the list of user skills that should be evaluated for this task
+        List<Long> taskUserSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
+        
+        // Get all user skills that are to be evaluated
+        List<UserSkill> userSkills = userSkillRepository.findAllByIds(taskUserSkillIds);
 
         return userSkills.stream()
                 .map(userSkill -> {
                     Skill skill = skillRepository.findById(userSkill.getSkillId())
                             .orElseThrow(() -> new IllegalStateException("Skill not found"));
                     
-                    // Only return skills that belong to the team member's skill category
-                    if (skill.getSkillCategoryId().equals(assignee.getSkillCategoryId())) {
-                        return new SkillDto(
-                            skill.getId(),
-                            skill.getName(),
-                            userSkill.getRating(),
-                            skill.getIsNecessary()
-                        );
-                    }
-                    return null;
+                    return new SkillDto(
+                        skill.getId(),
+                        skill.getName(),
+                        userSkill.getRating(),
+                        skill.getIsNecessary()
+                    );
                 })
-                .filter(dto -> dto != null)
                 .collect(Collectors.toList());
     }
 

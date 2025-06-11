@@ -95,7 +95,7 @@ public class JdbcTaskRepository {
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO tasks (evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        "VALUES (?, ?, ?, ?, ?, ?, ?::task_status)",
                 new String[]{"id"}
             );
             ps.setLong(1, task.getEvaluatorMemberId());
@@ -113,21 +113,24 @@ public class JdbcTaskRepository {
     }
 
     public void saveAll(Collection<Task> tasks) {
-        jdbcTemplate.batchUpdate(
-                "INSERT INTO tasks (evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) ",
-                tasks,
-                tasks.size(),
-                (ps, task) -> {
-                    ps.setLong(1, task.getEvaluatorMemberId());
-                    ps.setLong(2, task.getAssigneeMemberId());
-                    ps.setLong(3, task.getLeadMemberId());
-                    ps.setString(4, task.getTitle());
-                    ps.setString(5, task.getDescription());
-                    ps.setDate(6, Date.valueOf(task.getDeadlineCompletion()));
-                    ps.setString(7, task.getStatus().name());
-                }
-        );
+        String sql = "INSERT INTO tasks (evaluator_member_id, assignee_member_id, lead_member_id, title, description, deadline_completion, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?::task_status) RETURNING id";
+
+        int i = 0;
+        for (Task task : tasks) {
+            Long id = jdbcTemplate.queryForObject(
+                sql,
+                Long.class,
+                task.getEvaluatorMemberId(),
+                task.getAssigneeMemberId(),
+                task.getLeadMemberId(),
+                task.getTitle(),
+                task.getDescription(),
+                Date.valueOf(task.getDeadlineCompletion()),
+                task.getStatus().name()
+            );
+            task.setId(id);
+        }
     }
 
     public Optional<Task> findById(Long id) {
@@ -150,7 +153,7 @@ public class JdbcTaskRepository {
                         "title = ?, " +
                         "description = ?, " +
                         "deadline_completion = ?, " +
-                        "status = ? " +
+                        "status = ?::task_status " +
                         "WHERE id = ?",
                 task.getEvaluatorMemberId(),
                 task.getAssigneeMemberId(),
@@ -183,6 +186,21 @@ public class JdbcTaskRepository {
             "UPDATE tasks SET status = ?::task_status WHERE id = ?",
             status.name(),
             taskId
+        );
+    }
+
+    public List<Task> findAllByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = String.format("SELECT * FROM tasks WHERE id IN (%s)", placeholders);
+
+        return jdbcTemplate.query(
+                sql,
+                taskRowMapper,
+                ids.toArray()
         );
     }
 }
