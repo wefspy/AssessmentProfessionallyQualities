@@ -62,13 +62,13 @@ public class EvaluationService {
                 .orElseThrow(() -> new IllegalStateException("Assignee team member not found"));
 
         // Get the list of user skills that should be evaluated for this task
-        List<Long> taskUserSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
+        List<Long> taskSkillIds = taskEvaluatedSkillsRepository.findAllByTaskId(taskId);
         
-        // Get all user skills that are to be evaluated
-        Map<Long, UserSkill> userSkillsMap = userSkillRepository.findAllByIds(taskUserSkillIds)
-                .stream()
+        // Get all user skills for the assignee that match the task's required skills
+        List<UserSkill> assigneeSkills = userSkillRepository.findAllByUserIdAndSkillIds(assignee.getUserId(), taskSkillIds);
+        Map<Long, UserSkill> userSkillsMap = assigneeSkills.stream()
                 .collect(Collectors.toMap(
-                    us -> us.getSkillId(),
+                    UserSkill::getSkillId,
                     us -> us
                 ));
         
@@ -76,7 +76,7 @@ public class EvaluationService {
         for (EvaluationRequest.SkillEvaluation skillEval : request.skillEvaluations()) {
             UserSkill userSkill = userSkillsMap.get(skillEval.skillId());
             if (userSkill == null) {
-                throw new IllegalStateException("Skill " + skillEval.skillId() + " is not in the list of skills to be evaluated for this task");
+                throw new IllegalStateException("Skill " + skillEval.skillId() + " is not in the list of skills to be evaluated for this task's assignee");
             }
 
             // Create evaluation record

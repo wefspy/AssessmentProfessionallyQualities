@@ -8,6 +8,7 @@ import ru.wefspy.AssessmentProfessionallyQualities.domain.model.UserSkill;
 import ru.wefspy.AssessmentProfessionallyQualities.infrastructure.mapper.UserSkillRowMapper;
 
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -146,6 +147,24 @@ public class JdbcUserSkillRepository {
                 userSkillRowMapper,
                 userId,
                 skillCategoryId
+        );
+    }
+
+    public List<UserSkill> findAllByUserIdAndSkillIds(Long userId, List<Long> skillIds) {
+        if (skillIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String inSql = String.join(",", Collections.nCopies(skillIds.size(), "?"));
+        
+        Object[] params = new Object[skillIds.size() + 1];
+        params[0] = userId;
+        System.arraycopy(skillIds.toArray(), 0, params, 1, skillIds.size());
+
+        return jdbcTemplate.query(
+                String.format("SELECT * FROM users_skills WHERE user_id = ? AND skill_id IN (%s)", inSql),
+                userSkillRowMapper,
+                params
         );
     }
 }
