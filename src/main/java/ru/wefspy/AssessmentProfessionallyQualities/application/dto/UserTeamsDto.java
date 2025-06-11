@@ -4,6 +4,7 @@ public record UserTeamsDto(
         Long teamId,
         String teamName,
         Long skillCategoryId,
-        String skillCategoryName
+        String skillCategoryName,
+        String skillCategoryColor
 ) {
 } 

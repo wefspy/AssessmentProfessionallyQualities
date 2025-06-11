@@ -63,7 +63,8 @@ public class TeamService {
                             team.getId(),
                             team.getName(),
                             category.getId(),
-                            category.getName()
+                            category.getName(),
+                            category.getColor()
                     );
                 })
                 .collect(Collectors.toList());
